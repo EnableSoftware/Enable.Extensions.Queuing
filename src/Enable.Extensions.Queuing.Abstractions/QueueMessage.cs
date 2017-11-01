@@ -1,4 +1,4 @@
-﻿namespace Enable.Extensions.Queuing.Abstractions
+namespace Enable.Extensions.Queuing.Abstractions
 {
     internal class QueueMessage : IQueueMessage
     {
@@ -17,7 +17,7 @@
         public byte[] Body => _payload;
 
         public uint DequeueCount => throw new System.NotImplementedException();
-        
+
         public string LeaseId => throw new System.NotImplementedException();
 
         public string MessageId { get; }

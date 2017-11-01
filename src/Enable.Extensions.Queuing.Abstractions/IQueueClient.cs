@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace Enable.Extensions.Queuing.Abstractions
 {
-    public interface IQueueClient: IDisposable
+    public interface IQueueClient : IDisposable
     {
         /// <summary>
         /// Negative acknowledgement that the message was not processed correctly.
@@ -36,7 +36,9 @@ namespace Enable.Extensions.Queuing.Abstractions
         /// <summary>
         /// Asynchronously retrieve a message from the queue.
         /// </summary>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
         /// <returns>
         /// A <see cref="Task"/> representing the asynchronous operation.
         /// </returns>
@@ -47,7 +49,9 @@ namespace Enable.Extensions.Queuing.Abstractions
         /// Asynchronously enqueue a message on to the queue.
         /// </summary>
         /// <param name="message">The message to enqueue.</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
         /// <returns>
         /// A <see cref="Task"/> representing the asynchronous operation.
         /// </returns>
@@ -89,10 +93,8 @@ namespace Enable.Extensions.Queuing.Abstractions
             T content,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            
             var json = JsonConvert.SerializeObject(content);
 
-            
             var payload = Encoding.UTF8.GetBytes(json);
 
             var message = new QueueMessage(payload);
