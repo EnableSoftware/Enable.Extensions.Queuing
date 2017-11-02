@@ -81,11 +81,7 @@ namespace Enable.Extensions.Queuing.Abstractions
             string content,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var payload = Encoding.UTF8.GetBytes(content);
-
-            var message = new QueueMessage(payload);
-
-            return queue.EnqueueAsync(message, cancellationToken);
+            return queue.EnqueueAsync<string>(content, cancellationToken);
         }
 
         public static Task EnqueueAsync<T>(

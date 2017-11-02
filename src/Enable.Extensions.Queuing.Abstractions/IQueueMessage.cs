@@ -1,4 +1,7 @@
-﻿namespace Enable.Extensions.Queuing.Abstractions
+using System.Text;
+using Newtonsoft.Json;
+
+namespace Enable.Extensions.Queuing.Abstractions
 {
     /// <summary>
     /// Represents a message retrieved from a queue.
@@ -32,5 +35,19 @@
         /// Gets the content of the current message.
         /// </summary>
         byte[] Body { get; }
+    }
+
+    public static class IQueueMessageExtensions
+    {
+        public static T GetBody<T>(this IQueueMessage message)
+        {
+            var payload = message.Body;
+
+            var json = Encoding.UTF8.GetString(payload);
+
+            var body = JsonConvert.DeserializeObject<T>(json);
+
+            return body;
+        }
     }
 }
