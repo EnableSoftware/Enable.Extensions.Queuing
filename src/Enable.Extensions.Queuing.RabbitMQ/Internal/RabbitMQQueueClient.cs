@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 using RabbitMQ.Client;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
@@ -19,6 +21,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private readonly string _queueName;
         private readonly string _deadLetterQueueName;
 
+        private readonly IMemoryCache _unacknowledgedMessages;
+
         private bool _disposed;
 
         public RabbitMQQueueClient(ConnectionFactory connectionFactory, string queueName)
@@ -26,6 +30,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             _connectionFactory = connectionFactory;
             _connection = _connectionFactory.CreateConnection();
             _channel = _connection.CreateModel();
+
+            _unacknowledgedMessages = new MemoryCache(new MemoryCacheOptions());
 
             // Declare the dead letter queue.
             _deadLetterQueueName = GetDeadLetterQueueName(queueName);
@@ -80,6 +86,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 _channel.BasicReject(deliveryTag, requeue: false);
             }
 
+            _unacknowledgedMessages.Remove(deliveryTag);
+
             return Task.CompletedTask;
         }
 
@@ -93,6 +101,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             {
                 _channel.BasicAck(deliveryTag, multiple: false);
             }
+
+            _unacknowledgedMessages.Remove(deliveryTag);
 
             return Task.CompletedTask;
         }
@@ -108,6 +118,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             }
 
             var message = new RabbitMQQueueMessage(result);
+
+            RegisterUnacknowledgedMessage(message);
 
             return Task.FromResult<IQueueMessage>(message);
         }
@@ -135,8 +147,10 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            // TODO Implement automatic `nack`-ing.
-            throw new NotImplementedException();
+            // TODO Test the case that the connection is dropped. Should we clear our local memory cache?
+            RegisterUnacknowledgedMessage(message);
+
+            return Task.CompletedTask;
         }
 
         public void Dispose()
@@ -151,6 +165,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             {
                 if (disposing)
                 {
+                    _unacknowledgedMessages.Dispose();
                     _channel.Dispose();
                     _connection.Dispose();
                 }
@@ -173,6 +188,56 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private string GetDeadLetterQueueName(string queueName)
         {
             return $"{queueName}.dead-letter";
+        }
+
+        private void RegisterUnacknowledgedMessage(IQueueMessage message)
+        {
+            var cts = new CancellationTokenSource();
+
+            // Here we use a timer on a `CancellationTokenSource` to trigger
+            // the removal of a delivery tag after a given period of time
+            // instead of using an absolute expiration. This is because items
+            // with an absolute expiration are only removed if there is
+            // activity on the cache: there is no background process that
+            // removes expired items. For more information, see
+            // https://github.com/aspnet/Caching/issues/248.
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+                .SetPriority(CacheItemPriority.NeverRemove)
+                .RegisterPostEvictionCallback(OnLeaseExpired)
+                .AddExpirationToken(new CancellationChangeToken(cts.Token));
+
+            _unacknowledgedMessages.Set(
+                message.LeaseId,
+                message,
+                cacheEntryOptions);
+
+            cts.CancelAfter(TimeSpan.FromMinutes(1));
+        }
+
+        private void OnLeaseExpired(object key, object value, EvictionReason reason, object state)
+        {
+            switch (reason)
+            {
+                case EvictionReason.TokenExpired:
+                    var deliveryTag = Convert.ToUInt64(key);
+
+                    lock (_channel)
+                    {
+                        _channel.BasicReject(deliveryTag, requeue: true);
+                    }
+
+                    break;
+
+                case EvictionReason.Capacity:
+                case EvictionReason.Expired:
+                    throw new NotSupportedException();
+
+                case EvictionReason.None:
+                case EvictionReason.Removed:
+                case EvictionReason.Replaced:
+                default:
+                    break;
+            }
         }
     }
 }
