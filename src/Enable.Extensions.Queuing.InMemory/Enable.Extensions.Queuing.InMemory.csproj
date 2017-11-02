@@ -4,6 +4,16 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Authors>Enable · enable.com</Authors>
+    <Copyright>Copyright 2017</Copyright>
+    <Description>In Memory messaging queue abstraction implementation for building testable applications.</Description>
+    <PackageIconUrl>https://github.com/EnableSoftware.png</PackageIconUrl>
+    <PackageLicenseUrl>https://github.com/EnableSoftware/Enable.Extensions.Queuing/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/EnableSoftware/Enable.Extensions.Queuing</PackageProjectUrl>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Enable.Extensions.Queuing.Abstractions\Enable.Extensions.Queuing.Abstractions.csproj" />
   </ItemGroup>
