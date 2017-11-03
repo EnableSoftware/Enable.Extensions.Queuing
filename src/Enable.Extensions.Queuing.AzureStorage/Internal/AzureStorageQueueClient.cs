@@ -10,7 +10,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 {
     public class AzureStorageQueueClient : IQueueClient
     {
-        private const uint MaximumDequeueCount = 4;
+        private const uint MaximumDequeueCount = 10;
 
         private readonly AsyncLazy<CloudQueue> _queueFactory;
         private readonly AsyncLazy<CloudQueue> _deadLetterQueueFactory;
