@@ -60,7 +60,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _messageSender.SendAsync(new Message(message.Body));
+            return _messageSender.SendAsync(new Message(message.Body) { ContentType = "application/json" });
         }
 
         public Task RenewLockAsync(
