@@ -54,14 +54,13 @@ and have one out of any number of consumers process each individual message.
 ## Examples
 
 The following example demonstrates posting a message to a queue and then
-retrieving the same message. This uses an single application to both send and
+retrieving the same message. This uses a single application to both send and
 receive messages. In production systems you'll more likely have (multiple)
 different components publishing and consuming messages.
 
-Here we're using the RabbitMQ as our queue implementation. How we work with
-messages is the same across any of the queue implementations. The only
-differences are in the options that you need to pass in when constructing
-the queue factory.
+Here we're using the RabbitMQ queue provider. How we work with messages is the
+same across any of the available queue implementations. The only differences
+are in the options that are passed in when constructing the queue factory.
 
 ```csharp
 using System;
@@ -109,8 +108,8 @@ namespace QueuingSamples
                 // from `IQueueMessage.Body`. This property is our original
                 // message, "Hello, World!", stored as a byte array. This
                 // might not be that useful, so you can use the
-                // `IQueueMessage.GetBody<T>` extension methods to
-                // deserialise this back to your original type.
+                // `IQueueMessage.GetBody<T>` method to deserialise this back
+                // to your original type.
                 // In this case, we want to get our `string` back:
                 var payload = message.GetBody<string>();
 
