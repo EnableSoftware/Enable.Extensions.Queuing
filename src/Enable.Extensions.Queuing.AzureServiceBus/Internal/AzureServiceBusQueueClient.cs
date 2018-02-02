@@ -7,7 +7,7 @@ using Microsoft.Azure.ServiceBus.Core;
 
 namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 {
-    public class AzureServiceBusQueueClient : Abstractions.IQueueClient
+    public class AzureServiceBusQueueClient : BaseQueueClient
     {
         private readonly string _connectionString;
         private readonly string _queueName;
@@ -29,21 +29,21 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             _messageSender = new MessageSender(connectionString, queueName);
         }
 
-        public Task AbandonAsync(
+        public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             return _messageReceiver.AbandonAsync(message.LeaseId);
         }
 
-        public Task CompleteAsync(
+        public override Task CompleteAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             return _messageReceiver.CompleteAsync(message.LeaseId);
         }
 
-        public async Task<IQueueMessage> DequeueAsync(
+        public override async Task<IQueueMessage> DequeueAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
             var message = await _messageReceiver.ReceiveAsync();
@@ -56,21 +56,21 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             return new AzureServiceBusQueueMessage(message);
         }
 
-        public Task EnqueueAsync(
+        public override Task EnqueueAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             return _messageSender.SendAsync(new Message(message.Body) { ContentType = "application/json" });
         }
 
-        public Task RenewLockAsync(
+        public override Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             return _messageReceiver.RenewLockAsync(message.LeaseId);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);

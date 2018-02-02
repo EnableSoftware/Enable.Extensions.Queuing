@@ -22,7 +22,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
     /// cannot be used for inter-process communication. 
     /// </para>
     /// </remarks>
-    internal class InMemoryQueueClient : IQueueClient
+    internal class InMemoryQueueClient : BaseQueueClient
     {
         private readonly static ConcurrentDictionary<string, InMemoryQueue> _queues =
             new ConcurrentDictionary<string, InMemoryQueue>();
@@ -40,7 +40,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             _queueName = queueName;
         }
 
-        public Task AbandonAsync(
+        public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -49,7 +49,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             return Task.CompletedTask;
         }
 
-        public Task CompleteAsync(
+        public override Task CompleteAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -58,7 +58,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             return Task.CompletedTask;
         }
 
-        public Task<IQueueMessage> DequeueAsync(
+        public override Task<IQueueMessage> DequeueAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
             ThrowIfDisposed();
@@ -76,7 +76,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             throw new NotSupportedException();
         }
 
-        public Task EnqueueAsync(
+        public override Task EnqueueAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -92,7 +92,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             throw new NotSupportedException();
         }
 
-        public Task RenewLockAsync(
+        public override Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -101,7 +101,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             return Task.CompletedTask;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);

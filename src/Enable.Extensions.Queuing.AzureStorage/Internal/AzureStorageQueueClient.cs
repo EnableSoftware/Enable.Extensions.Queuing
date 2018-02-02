@@ -8,7 +8,7 @@ using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace Enable.Extensions.Queuing.AzureStorage.Internal
 {
-    public class AzureStorageQueueClient : IQueueClient
+    public class AzureStorageQueueClient : BaseQueueClient
     {
         private const uint MaximumDequeueCount = 10;
 
@@ -43,7 +43,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             });
         }
 
-        public Task AbandonAsync(
+        public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -64,7 +64,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 cancellationToken);
         }
 
-        public Task CompleteAsync(
+        public override Task CompleteAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -76,7 +76,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 cancellationToken);
         }
 
-        public async Task<IQueueMessage> DequeueAsync(
+        public override async Task<IQueueMessage> DequeueAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
             // Iterate through the queue until we either have no further messages
@@ -144,7 +144,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             }
         }
 
-        public async Task EnqueueAsync(
+        public override async Task EnqueueAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -161,7 +161,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             message = new AzureStorageQueueMessage(cloudQueueMessage);
         }
 
-        public Task RenewLockAsync(
+        public override Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -178,7 +178,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 cancellationToken);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
         }
 

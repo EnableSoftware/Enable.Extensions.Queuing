@@ -8,7 +8,7 @@ using RabbitMQ.Client;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
-    internal class RabbitMQQueueClient : IQueueClient
+    internal class RabbitMQQueueClient : BaseQueueClient
     {
         private const string RedeliveryCountHeaderName = "x-redelivered-count";
 
@@ -61,7 +61,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
         }
 
-        public Task AbandonAsync(
+        public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -83,7 +83,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             return Task.CompletedTask;
         }
 
-        public Task CompleteAsync(
+        public override Task CompleteAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -97,7 +97,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             return Task.CompletedTask;
         }
 
-        public Task<IQueueMessage> DequeueAsync(
+        public override Task<IQueueMessage> DequeueAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
             BasicGetResult result;
@@ -112,7 +112,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             return Task.FromResult<IQueueMessage>(message);
         }
 
-        public Task EnqueueAsync(
+        public override Task EnqueueAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -131,7 +131,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             return Task.CompletedTask;
         }
 
-        public Task RenewLockAsync(
+        public override Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -139,7 +139,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             throw new NotImplementedException();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);

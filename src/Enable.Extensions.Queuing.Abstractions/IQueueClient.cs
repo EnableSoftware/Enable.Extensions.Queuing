@@ -1,8 +1,6 @@
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace Enable.Extensions.Queuing.Abstractions
 {
@@ -59,43 +57,51 @@ namespace Enable.Extensions.Queuing.Abstractions
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <summary>
+        /// Asynchronously enqueue a message on to the queue.
+        /// </summary>
+        /// <param name="content">The payload of the message to enqueue.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync(
+             byte[] content,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Asynchronously enqueue a message on to the queue.
+        /// </summary>
+        /// <param name="content">The payload of the message to enqueue.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync(
+            string content,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Asynchronously enqueue a message on to the queue.
+        /// </summary>
+        /// <typeparam name="T">The type of the payload to enqueue.</typeparam>
+        /// <param name="content">The payload of the message to enqueue.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync<T>(
+            T content,
+            CancellationToken cancellationToken = default(CancellationToken));
+
         Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken));
-    }
-
-    public static class IQueueExtensions
-    {
-        public static Task EnqueueAsync(
-            this IQueueClient queue,
-            byte[] content,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var message = new QueueMessage(content);
-
-            return queue.EnqueueAsync(message, cancellationToken);
-        }
-
-        public static Task EnqueueAsync(
-            this IQueueClient queue,
-            string content,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return queue.EnqueueAsync<string>(content, cancellationToken);
-        }
-
-        public static Task EnqueueAsync<T>(
-            this IQueueClient queue,
-            T content,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var json = JsonConvert.SerializeObject(content);
-
-            var payload = Encoding.UTF8.GetBytes(json);
-
-            var message = new QueueMessage(payload);
-
-            return queue.EnqueueAsync(message, cancellationToken);
-        }
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.Azure.ServiceBus;
 
 namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 {
-    public class AzureServiceBusQueueMessage : IQueueMessage
+    public class AzureServiceBusQueueMessage : BaseQueueMessage
     {
         private readonly Message _message;
 
@@ -12,12 +12,12 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             _message = message;
         }
 
-        public string MessageId => _message.MessageId;
+        public override string MessageId => _message.MessageId;
 
-        public byte[] Body => _message.Body;
+        public override byte[] Body => _message.Body;
 
-        public uint DequeueCount => (uint)_message.SystemProperties.DeliveryCount;
+        public override uint DequeueCount => (uint)_message.SystemProperties.DeliveryCount;
 
-        public string LeaseId => _message.SystemProperties.LockToken;
+        public override string LeaseId => _message.SystemProperties.LockToken;
     }
 }

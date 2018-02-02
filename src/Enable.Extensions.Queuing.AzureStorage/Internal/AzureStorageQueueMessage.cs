@@ -3,7 +3,7 @@ using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace Enable.Extensions.Queuing.AzureStorage.Internal
 {
-    public class AzureStorageQueueMessage : IQueueMessage
+    public class AzureStorageQueueMessage : BaseQueueMessage
     {
         private readonly CloudQueueMessage _message;
 
@@ -12,12 +12,12 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             _message = message;
         }
 
-        public string MessageId => _message.Id;
+        public override string MessageId => _message.Id;
 
-        public string LeaseId => _message.PopReceipt;
+        public override string LeaseId => _message.PopReceipt;
 
-        public uint DequeueCount => (uint)_message.DequeueCount;
+        public override uint DequeueCount => (uint)_message.DequeueCount;
 
-        public byte[] Body => _message.AsBytes;
+        public override byte[] Body => _message.AsBytes;
     }
 }

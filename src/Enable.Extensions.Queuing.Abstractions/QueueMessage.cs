@@ -1,6 +1,6 @@
 namespace Enable.Extensions.Queuing.Abstractions
 {
-    internal class QueueMessage : IQueueMessage
+    internal class QueueMessage : BaseQueueMessage
     {
         private readonly byte[] _payload;
 
@@ -14,12 +14,12 @@ namespace Enable.Extensions.Queuing.Abstractions
             _payload = payload;
         }
 
-        public byte[] Body => _payload;
+        public override byte[] Body => _payload;
 
-        public uint DequeueCount => throw new System.NotImplementedException();
+        public override uint DequeueCount => throw new System.NotImplementedException();
 
-        public string LeaseId => throw new System.NotImplementedException();
+        public override string LeaseId => throw new System.NotImplementedException();
 
-        public string MessageId { get; }
+        public override string MessageId { get; }
     }
 }

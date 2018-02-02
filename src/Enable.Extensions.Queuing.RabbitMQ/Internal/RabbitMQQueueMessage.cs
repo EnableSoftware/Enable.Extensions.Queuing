@@ -3,7 +3,7 @@ using RabbitMQ.Client;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
-    internal class RabbitMQQueueMessage : IQueueMessage
+    internal class RabbitMQQueueMessage : BaseQueueMessage
     {
         public RabbitMQQueueMessage(BasicGetResult result)
         {
@@ -20,12 +20,12 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             DequeueCount = 1;
         }
 
-        public byte[] Body { get; }
+        public override byte[] Body { get; }
 
-        public uint DequeueCount { get; }
+        public override uint DequeueCount { get; }
 
-        public string LeaseId { get; }
+        public override string LeaseId { get; }
 
-        public string MessageId { get; }
+        public override string MessageId { get; }
     }
 }
