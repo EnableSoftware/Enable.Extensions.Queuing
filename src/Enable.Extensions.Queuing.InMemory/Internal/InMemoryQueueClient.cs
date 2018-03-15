@@ -27,17 +27,15 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         private readonly static ConcurrentDictionary<string, InMemoryQueue> _queues =
             new ConcurrentDictionary<string, InMemoryQueue>();
 
-        private readonly string _queueName;
+        private readonly InMemoryQueue _queue;
 
         private bool _disposed;
 
         public InMemoryQueueClient(string queueName)
         {
-            var queue = new ConcurrentQueue<IQueueMessage>();
-
-            _queues.TryAdd(queueName, queue);
-
-            _queueName = queueName;
+            _queue = _queues.GetOrAdd(
+                queueName,
+                new ConcurrentQueue<IQueueMessage>());
         }
 
         public override Task AbandonAsync(
@@ -63,17 +61,12 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             ThrowIfDisposed();
 
-            if (_queues.TryGetValue(_queueName, out InMemoryQueue queue))
+            if (_queue.TryDequeue(out IQueueMessage message))
             {
-                if (queue.TryDequeue(out IQueueMessage message))
-                {
-                    return Task.FromResult(message);
-                }
-
-                return Task.FromResult<IQueueMessage>(null);
+                return Task.FromResult(message);
             }
 
-            throw new NotSupportedException();
+            return Task.FromResult<IQueueMessage>(null);
         }
 
         public override Task EnqueueAsync(
@@ -82,14 +75,9 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             ThrowIfDisposed();
 
-            if (_queues.TryGetValue(_queueName, out InMemoryQueue queue))
-            {
-                queue.Enqueue(message);
+            _queue.Enqueue(message);
 
-                return Task.CompletedTask;
-            }
-
-            throw new NotSupportedException();
+            return Task.CompletedTask;
         }
 
         public override Task RenewLockAsync(
@@ -113,7 +101,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             {
                 if (disposing)
                 {
-                    _queues.Clear();
+                    _queue.Clear();
                 }
 
                 _disposed = true;
