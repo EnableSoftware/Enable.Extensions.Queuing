@@ -124,12 +124,37 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
 
             var queueFactory = new InMemoryQueueClientFactory();
 
-            var instance1 = queueFactory.GetQueueReference(queueName);
-            var instance2 = queueFactory.GetQueueReference(queueName);
+            using (var instance1 = queueFactory.GetQueueReference(queueName))
+            using (var instance2 = queueFactory.GetQueueReference(queueName))
+            {
+                var content = Guid.NewGuid().ToString();
+
+                await instance1.EnqueueAsync(content, CancellationToken.None);
+
+                // Act
+                var message = await instance2.DequeueAsync(CancellationToken.None);
+
+                // Assert
+                Assert.Equal(content, message.GetBody<string>());
+            }
+        }
+
+        [Fact]
+        public async Task CanDequeueAcrossInstances_WithDisposedInstance()
+        {
+            // Arrange
+            var queueName = Guid.NewGuid().ToString();
+
+            var queueFactory = new InMemoryQueueClientFactory();
 
             var content = Guid.NewGuid().ToString();
 
-            await instance1.EnqueueAsync(content, CancellationToken.None);
+            using (var instance1 = queueFactory.GetQueueReference(queueName))
+            {
+                await instance1.EnqueueAsync(content, CancellationToken.None);
+            }
+
+            var instance2 = queueFactory.GetQueueReference(queueName);
 
             // Act
             var message = await instance2.DequeueAsync(CancellationToken.None);

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
-using InMemoryQueue = System.Collections.Concurrent.ConcurrentQueue<Enable.Extensions.Queuing.Abstractions.IQueueMessage>;
 
 namespace Enable.Extensions.Queuing.InMemory.Internal
 {
@@ -33,9 +32,19 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
         public InMemoryQueueClient(string queueName)
         {
-            _queue = _queues.GetOrAdd(
+            // Here we add a new queue instance to a cache of queues if we've
+            // not seen this value of `queueName` before, or we increment a
+            // reference count on the previously cached queue. This reference
+            // counter is used to clear the queue only once all references to
+            // queues for the same `queueName` are disposed.
+            _queue = _queues.AddOrUpdate(
                 queueName,
-                new ConcurrentQueue<IQueueMessage>());
+                new InMemoryQueue(),
+                (key, oldValue) =>
+                {
+                    oldValue.IncrementReferenceCount();
+                    return oldValue;
+                });
         }
 
         public override Task AbandonAsync(
@@ -101,7 +110,12 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             {
                 if (disposing)
                 {
-                    _queue.Clear();
+                    var referenceCount = _queue.DecrementReferenceCount();
+
+                    if (referenceCount == 0)
+                    {
+                        _queue.Clear();
+                    }
                 }
 
                 _disposed = true;
