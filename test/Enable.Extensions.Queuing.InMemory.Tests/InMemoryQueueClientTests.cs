@@ -116,6 +116,28 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
             await _sut.RenewLockAsync(message, CancellationToken.None);
         }
 
+        [Fact]
+        public async Task CanDequeueAcrossInstances()
+        {
+            // Arrange
+            var queueName = Guid.NewGuid().ToString();
+
+            var queueFactory = new InMemoryQueueClientFactory();
+
+            var instance1 = queueFactory.GetQueueReference(queueName);
+            var instance2 = queueFactory.GetQueueReference(queueName);
+
+            var content = Guid.NewGuid().ToString();
+
+            await instance1.EnqueueAsync(content, CancellationToken.None);
+
+            // Act
+            var message = await instance2.DequeueAsync(CancellationToken.None);
+
+            // Assert
+            Assert.Equal(content, message.GetBody<string>());
+        }
+
         public void Dispose()
         {
             Dispose(true);
