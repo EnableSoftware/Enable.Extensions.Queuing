@@ -98,13 +98,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             return Task.CompletedTask;
         }
 
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!_disposed)
             {
@@ -120,6 +114,8 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
                 _disposed = true;
             }
+
+            base.Dispose(disposing);
         }
 
         private void ThrowIfDisposed()

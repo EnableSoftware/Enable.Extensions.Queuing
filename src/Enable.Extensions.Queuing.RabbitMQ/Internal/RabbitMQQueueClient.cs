@@ -139,13 +139,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             throw new NotImplementedException();
         }
 
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!_disposed)
             {
@@ -157,6 +151,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
                 _disposed = true;
             }
+
+            base.Dispose(disposing);
         }
 
         private static IBasicProperties GetBasicMessageProperties(IModel channel)

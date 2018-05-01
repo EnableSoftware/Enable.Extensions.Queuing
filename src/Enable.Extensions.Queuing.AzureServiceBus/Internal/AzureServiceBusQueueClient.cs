@@ -70,13 +70,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             return _messageReceiver.RenewLockAsync(message.LeaseId);
         }
 
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!_disposed)
             {
@@ -93,6 +87,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
                 _disposed = true;
             }
+
+            base.Dispose(disposing);
         }
     }
 }

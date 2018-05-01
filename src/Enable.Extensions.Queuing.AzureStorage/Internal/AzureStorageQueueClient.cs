@@ -178,10 +178,6 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 cancellationToken);
         }
 
-        public override void Dispose()
-        {
-        }
-
         private string GetDeadLetterQueueName(string queueName)
         {
             // Queue names between 3-63 characters consisting of lower case letters, numbers & dashes.
