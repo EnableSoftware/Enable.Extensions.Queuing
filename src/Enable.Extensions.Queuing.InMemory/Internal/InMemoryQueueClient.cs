@@ -89,6 +89,14 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             return Task.CompletedTask;
         }
 
+        public override Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> handler)
+        {
+            _queue.RegisterMessageHandler(handler);
+
+            return Task.CompletedTask;
+        }
+
         public override Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))

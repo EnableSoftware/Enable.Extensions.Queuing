@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
@@ -107,7 +108,10 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 result = _channel.BasicGet(_queueName, autoAck: false);
             }
 
-            var message = new RabbitMQQueueMessage(result);
+            var message = new RabbitMQQueueMessage(
+                result.Body,
+                result.DeliveryTag,
+                result.BasicProperties);
 
             return Task.FromResult<IQueueMessage>(message);
         }
@@ -126,6 +130,26 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                     _queueName,
                     messageProperties,
                     body);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public override Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> handler)
+        {
+            var consumer = new EventingBasicConsumer(_channel);
+
+            consumer.Received += (_channel, eventArgs) => {
+                var message = new RabbitMQQueueMessage(
+                    eventArgs.Body,
+                    eventArgs.DeliveryTag,
+                    eventArgs.BasicProperties);
+            };
+
+            lock (_channel)
+            {
+                _channel.BasicConsume(_queueName, autoAck: false, consumer: consumer);
             }
 
             return Task.CompletedTask;

@@ -115,6 +115,38 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
         }
 
         [Fact]
+        public async Task RegisterMessageHandler_CanInvoke()
+        {
+            // Act
+            await _sut.RegisterMessageHandler(
+                (message, cancellationToken) => throw new Exception("There should be no messages to process."));
+        }
+
+        [Fact]
+        public async Task RegisterMessageHandler_MessageHandlerInvoked()
+        {
+            // Arrange
+            var messageHandled = false;
+
+            Func<IQueueMessage, CancellationToken, Task> handler
+                = (message, cancellationToken) =>
+                {
+                    messageHandled = true;
+                    return Task.CompletedTask;
+                };
+
+            await _sut.RegisterMessageHandler(handler);
+
+            // Act
+            await _sut.EnqueueAsync(
+                Guid.NewGuid().ToString(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.True(messageHandled);
+        }
+
+        [Fact]
         public async Task RenewLockAsync_CanInvoke()
         {
             // Arrange

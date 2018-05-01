@@ -5,11 +5,14 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
     internal class RabbitMQQueueMessage : BaseQueueMessage
     {
-        public RabbitMQQueueMessage(BasicGetResult result)
+        public RabbitMQQueueMessage(
+            byte[] body,
+            ulong deliveryTag,
+            IBasicProperties properties)
         {
-            Body = result.Body;
-            LeaseId = result.DeliveryTag.ToString();
-            MessageId = result.BasicProperties.MessageId;
+            Body = body;
+            LeaseId = deliveryTag.ToString();
+            MessageId = properties.MessageId;
 
             // Storing a delivery count is on the roadmap for RabbitMQ 3.8, see
             // https://github.com/rabbitmq/rabbitmq-server/issues/502 for more

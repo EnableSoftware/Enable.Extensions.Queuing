@@ -103,6 +103,70 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
         }
 
         [Fact]
+        public async Task RegisterMessageHandler_CanInvoke()
+        {
+            // Act
+            await _sut.RegisterMessageHandler(
+                (message, cancellationToken) => throw new Exception("There should be no messages to process."));
+        }
+
+        [Fact]
+        public async Task RegisterMessageHandler_MessageHandlerInvoked()
+        {
+            // Arrange
+            var messageHandled = false;
+
+            Func<IQueueMessage, CancellationToken, Task> handler
+                = (message, cancellationToken) =>
+                {
+                    messageHandled = true;
+                    return Task.CompletedTask;
+                };
+
+            await _sut.RegisterMessageHandler(handler);
+
+            // Act
+            await _sut.EnqueueAsync(
+                Guid.NewGuid().ToString(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.True(messageHandled);
+        }
+
+        [Fact]
+        public async Task RegisterMessageHandler_MessageHandlerInvokedAcrossInstances()
+        {
+            // Arrange
+            var queueName = Guid.NewGuid().ToString();
+
+            var queueFactory = new InMemoryQueueClientFactory();
+
+            using (var instance1 = queueFactory.GetQueueReference(queueName))
+            using (var instance2 = queueFactory.GetQueueReference(queueName))
+            {
+                var content = Guid.NewGuid().ToString();
+
+                var messageHandled = false;
+
+               Func<IQueueMessage, CancellationToken, Task> handler
+                    = (message, cancellationToken) =>
+                    {
+                        messageHandled = true;
+                        return Task.CompletedTask;
+                    };
+
+                await instance2.RegisterMessageHandler(handler);
+
+                // Act
+                await instance1.EnqueueAsync(content, CancellationToken.None);
+
+                // Assert
+                Assert.True(messageHandled);
+            }
+        }
+
+        [Fact]
         public async Task RenewLockAsync_CanInvoke()
         {
             // Arrange

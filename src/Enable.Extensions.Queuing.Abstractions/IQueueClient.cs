@@ -100,6 +100,15 @@ namespace Enable.Extensions.Queuing.Abstractions
             T content,
             CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <summary>
+        /// Register a message handler. This handler is awaited each time that
+        /// a new message is received.
+        /// </summary>
+        /// <param name="handler">The handler that processes each message.</param>
+        /// <remarks>A new thread is started to receive messages.</remarks>
+        Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> handler);
+
         Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken));

@@ -13,6 +13,8 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
         private int _referenceCount = 0;
 
+        private Func<IQueueMessage, CancellationToken, Task> _messageHandler;
+
         public bool TryDequeue(out IQueueMessage message)
         {
             return _queue.TryDequeue(out message);
@@ -21,6 +23,8 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         public void Enqueue(IQueueMessage message)
         {
             _queue.Enqueue(message);
+
+            _messageHandler?.Invoke(message, CancellationToken.None);
         }
 
         public void Clear()
@@ -38,5 +42,15 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             return Interlocked.Decrement(ref _referenceCount);
         }
 
+        public void RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> handler)
+        {
+            if (_messageHandler != null)
+            {
+                throw new InvalidOperationException("A message handler has already been registered.");
+            }
+
+            _messageHandler = handler;
+        }
     }
 }

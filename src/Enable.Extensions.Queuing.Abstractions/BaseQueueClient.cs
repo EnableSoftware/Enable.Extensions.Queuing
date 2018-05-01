@@ -20,9 +20,9 @@ namespace Enable.Extensions.Queuing.Abstractions
             CancellationToken cancellationToken = default(CancellationToken));
 
         public void Dispose()
-        {
+        { 
             Dispose(true);
-            GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);           
         }
 
         public abstract Task EnqueueAsync(
@@ -57,6 +57,9 @@ namespace Enable.Extensions.Queuing.Abstractions
 
             return EnqueueAsync(message, cancellationToken);
         }
+
+        public abstract Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> handler);
 
         public abstract Task RenewLockAsync(
             IQueueMessage message,

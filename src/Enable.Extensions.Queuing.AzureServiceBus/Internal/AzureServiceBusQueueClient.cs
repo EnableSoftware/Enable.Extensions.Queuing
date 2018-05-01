@@ -63,6 +63,23 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             return _messageSender.SendAsync(new Message(message.Body) { ContentType = "application/json" });
         }
 
+        public override Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> handler)
+        {
+            var options = new MessageHandlerOptions((args) => Task.CompletedTask)
+            {
+                AutoComplete = false,
+                MaxConcurrentCalls = 1, // TODO This value should be configurable.
+                MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
+            };
+
+            _messageReceiver.RegisterMessageHandler(
+                (message, token) => handler(new AzureServiceBusQueueMessage(message), token),
+                options);
+
+            return Task.CompletedTask;
+        }
+
         public override Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))

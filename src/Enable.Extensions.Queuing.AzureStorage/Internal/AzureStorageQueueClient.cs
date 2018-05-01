@@ -17,6 +17,14 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         private readonly TimeSpan _visibilityTimeout = TimeSpan.FromMinutes(1);
 
+        private readonly object _messagePumpSyncLock = new object();
+
+        private MessagePump _messagePump;
+
+        private MessageReceiver _messagePumpReceiver;
+
+        private CancellationTokenSource _messagePumpCancellationTokenSource;
+
         public AzureStorageQueueClient(
             string accountName,
             string accountKey,
@@ -83,11 +91,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             // or we find one which does not exceed the maximum dequeue count.
             while (true)
             {
-                var message = await GetQueue().GetMessageAsync(
-                    _visibilityTimeout,
-                    null,
-                    null,
-                    cancellationToken);
+                var message = await GetMessageAsync(cancellationToken);
 
                 // If there are no further messages in the queue, return.
                 if (message == null)
@@ -161,6 +165,48 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             message = new AzureStorageQueueMessage(cloudQueueMessage);
         }
 
+        public override async Task RegisterMessageHandler(Func<IQueueMessage, CancellationToken, Task> handler)
+        {
+            lock (_messagePumpSyncLock)
+            {
+                if (_messagePump != null)
+                {
+                    throw new InvalidOperationException("A message handler has already been registered.");
+                }
+
+                _messagePumpReceiver = async (token) =>
+                {
+                    var message = await GetMessageAsync(token);
+                    return new AzureStorageQueueMessage(message);
+                };
+
+                _messagePumpCancellationTokenSource = new CancellationTokenSource();
+
+                _messagePump = new MessagePump(
+                    handler,
+                    _messagePumpReceiver,
+                    _messagePumpCancellationTokenSource.Token);
+            }
+
+            try
+            {
+                await _messagePump.StartPumpAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                lock (_messagePumpSyncLock)
+                {
+                    if (_messagePump != null)
+                    {
+                        _messagePumpCancellationTokenSource.Cancel();
+                        _messagePump = null;
+                    }
+                }
+
+                throw;
+            }
+        }
+
         public override Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
@@ -176,6 +222,22 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 null,
                 null,
                 cancellationToken);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_messagePump != null)
+                {
+                    _messagePumpCancellationTokenSource.Cancel();
+                    _messagePumpCancellationTokenSource.Dispose();
+
+                    _messagePump = null;
+                }
+            }
+
+            base.Dispose(disposing);
         }
 
         private string GetDeadLetterQueueName(string queueName)
@@ -194,6 +256,15 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
         private CloudQueue GetDeadLetterQueue()
         {
             return _deadLetterQueueFactory.GetAwaiter().GetResult();
+        }
+
+        private Task<CloudQueueMessage> GetMessageAsync(CancellationToken cancellationToken)
+        {
+            return GetQueue().GetMessageAsync(
+                _visibilityTimeout,
+                null,
+                null,
+                cancellationToken);
         }
     }
 }
