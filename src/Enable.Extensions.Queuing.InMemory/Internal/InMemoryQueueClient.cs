@@ -39,7 +39,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             // queues for the same `queueName` are disposed.
             _queue = _queues.AddOrUpdate(
                 queueName,
-                new InMemoryQueue(),
+                new InMemoryQueue(this),
                 (key, oldValue) =>
                 {
                     oldValue.IncrementReferenceCount();

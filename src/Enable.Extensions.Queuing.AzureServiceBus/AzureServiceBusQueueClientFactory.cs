@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Enable.Extensions.Queuing.Abstractions;
 using Enable.Extensions.Queuing.AzureServiceBus.Internal;
 
@@ -30,7 +30,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
                 throw new ArgumentException(nameof(queueName));
             }
 
-            return new AzureServiceBusQueueClient(_options.ConnectionString, queueName);
+            return new AzureServiceBusQueueClient(
+                _options.ConnectionString,
+                queueName,
+                _options.MaxConcurrentCalls,
+                _options.ExceptionReceivedHandler);
         }
     }
 }

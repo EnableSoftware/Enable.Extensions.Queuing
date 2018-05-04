@@ -2,13 +2,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
-using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace Enable.Extensions.Queuing.AzureStorage.Internal
 {
     internal class MessagePump
     {
-        private readonly MessageReceiver _messageReceiver;
+        private readonly AzureStorageQueueClient _queueClient;
 
         private readonly Func<IQueueMessage, CancellationToken, Task> _onMessageCallback;
 
@@ -18,26 +17,11 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         public MessagePump(
             Func<IQueueMessage, CancellationToken, Task> callback,
-            MessageReceiver messageReceiver,
+            AzureStorageQueueClient queueClient,
             CancellationToken cancellationToken)
         {
-            if (callback == null)
-            {
-                throw new ArgumentNullException(nameof(callback));
-            }
-
-            if (messageReceiver == null)
-            {
-                throw new ArgumentNullException(nameof(messageReceiver));
-            }
-
-            if (cancellationToken == null)
-            {
-                throw new ArgumentNullException(nameof(cancellationToken));
-            }
-
-            _onMessageCallback = callback;
-            _messageReceiver = messageReceiver;
+            _onMessageCallback = callback ?? throw new ArgumentNullException(nameof(callback));
+            _queueClient = queueClient ?? throw new ArgumentNullException(nameof(queueClient));
             _cancellationToken = cancellationToken;
 
             // TODO The number of concurrent calls should be configurable.
@@ -46,7 +30,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         public Task StartPumpAsync()
         {
-            return Task.Run(() => MessagePumpTaskAsync());
+            Task.Run(MessagePumpTaskAsync).Ignore();
+            return Task.CompletedTask;
         }
 
         private async Task MessagePumpTaskAsync()
@@ -59,14 +44,23 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 {
                     await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
 
-                    message = await _messageReceiver(_cancellationToken).ConfigureAwait(false);
+                    message = await _queueClient.MessageReceiver(_cancellationToken).ConfigureAwait(false);
 
                     // TODO We need to back off when there are no messages in the queue.
                     if (message != null)
                     {
                         Task.Run(async () =>
                         {
-                            await _onMessageCallback(message, _cancellationToken).ConfigureAwait(false);
+                            try
+                            {
+                                await _onMessageCallback(message, _cancellationToken).ConfigureAwait(false);
+                                await _queueClient.CompleteAsync(message, _cancellationToken).ConfigureAwait(false);
+                            }
+                            catch
+                            {
+                                await _queueClient.AbandonAsync(message, _cancellationToken).ConfigureAwait(false);
+                                throw;
+                            }
                         })
                         .Ignore();
                     }

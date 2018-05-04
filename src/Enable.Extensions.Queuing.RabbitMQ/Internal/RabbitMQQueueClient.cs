@@ -135,12 +135,14 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             return Task.CompletedTask;
         }
 
+        // TODO Auto-complete
         public override Task RegisterMessageHandler(
             Func<IQueueMessage, CancellationToken, Task> handler)
         {
             var consumer = new EventingBasicConsumer(_channel);
 
-            consumer.Received += (_channel, eventArgs) => {
+            consumer.Received += (channel, eventArgs) =>
+            {
                 var message = new RabbitMQQueueMessage(
                     eventArgs.Body,
                     eventArgs.DeliveryTag,

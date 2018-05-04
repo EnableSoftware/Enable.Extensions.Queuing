@@ -14,15 +14,10 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         private readonly AsyncLazy<CloudQueue> _queueFactory;
         private readonly AsyncLazy<CloudQueue> _deadLetterQueueFactory;
-
         private readonly TimeSpan _visibilityTimeout = TimeSpan.FromMinutes(1);
-
         private readonly object _messagePumpSyncLock = new object();
-
         private MessagePump _messagePump;
-
-        private MessageReceiver _messagePumpReceiver;
-
+        private MessageReceiver _messageReceiver;
         private CancellationTokenSource _messagePumpCancellationTokenSource;
 
         public AzureStorageQueueClient(
@@ -50,6 +45,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 return deadLetterQueue;
             });
         }
+
+        public MessageReceiver MessageReceiver { get => _messageReceiver; }
 
         public override Task AbandonAsync(
             IQueueMessage message,
@@ -111,8 +108,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                     // is an issue removing this from the main queue.
                     var messageDetails = new
                     {
-                        Id = message.Id,
-                        PopReceipt = message.PopReceipt
+                        message.Id,
+                        message.PopReceipt
                     };
 
                     await GetDeadLetterQueue().AddMessageAsync(
@@ -174,7 +171,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                     throw new InvalidOperationException("A message handler has already been registered.");
                 }
 
-                _messagePumpReceiver = async (token) =>
+                _messageReceiver = async (token) =>
                 {
                     var message = await GetMessageAsync(token);
                     return new AzureStorageQueueMessage(message);
@@ -184,7 +181,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
                 _messagePump = new MessagePump(
                     handler,
-                    _messagePumpReceiver,
+                    this,
                     _messagePumpCancellationTokenSource.Token);
             }
 

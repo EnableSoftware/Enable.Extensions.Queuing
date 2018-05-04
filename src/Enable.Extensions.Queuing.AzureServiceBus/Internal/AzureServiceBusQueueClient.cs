@@ -11,15 +11,23 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
     {
         private readonly string _connectionString;
         private readonly string _queueName;
+        private readonly int _maxConcurrentCalls;
+        private readonly Func<ExceptionReceivedEventArgs, Task> _exceptionReceivedHandler;
         private readonly MessageReceiver _messageReceiver;
         private readonly MessageSender _messageSender;
 
         private bool _disposed;
 
-        public AzureServiceBusQueueClient(string connectionString, string queueName)
+        public AzureServiceBusQueueClient(
+            string connectionString,
+            string queueName,
+            int maxConcurrentCalls,
+            Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
             _connectionString = connectionString;
             _queueName = queueName;
+            _maxConcurrentCalls = maxConcurrentCalls;
+            _exceptionReceivedHandler = exceptionReceivedHandler ?? ((args) => Task.CompletedTask);
 
             _messageReceiver = new MessageReceiver(
                     connectionString,
@@ -66,10 +74,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         public override Task RegisterMessageHandler(
             Func<IQueueMessage, CancellationToken, Task> handler)
         {
-            var options = new MessageHandlerOptions((args) => Task.CompletedTask)
+            var options = new MessageHandlerOptions(_exceptionReceivedHandler)
             {
-                AutoComplete = false,
-                MaxConcurrentCalls = 1, // TODO This value should be configurable.
+                AutoComplete = true,
+                MaxConcurrentCalls = _maxConcurrentCalls,
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };
 

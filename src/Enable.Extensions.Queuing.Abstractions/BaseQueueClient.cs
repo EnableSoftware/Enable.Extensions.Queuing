@@ -20,9 +20,9 @@ namespace Enable.Extensions.Queuing.Abstractions
             CancellationToken cancellationToken = default(CancellationToken));
 
         public void Dispose()
-        { 
+        {
             Dispose(true);
-            GC.SuppressFinalize(this);           
+            GC.SuppressFinalize(this);
         }
 
         public abstract Task EnqueueAsync(

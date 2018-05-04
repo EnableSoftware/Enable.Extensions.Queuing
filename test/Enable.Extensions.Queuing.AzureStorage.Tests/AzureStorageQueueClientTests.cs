@@ -126,14 +126,13 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
         public async Task RegisterMessageHandler_MessageHandlerInvoked()
         {
             // Arrange
-            var messageHandled = false;
+            var evt = new ManualResetEvent(false);
 
-            Func<IQueueMessage, CancellationToken, Task> handler
-                = (message, cancellationToken) =>
-                {
-                    messageHandled = true;
-                    return Task.CompletedTask;
-                };
+            Task handler(IQueueMessage message, CancellationToken cancellationToken)
+            {
+                evt.Set();
+                return Task.CompletedTask;
+            }
 
             await _sut.RegisterMessageHandler(handler);
 
@@ -143,7 +142,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(messageHandled);
+            Assert.True(evt.WaitOne(1000));
         }
 
         [Fact]

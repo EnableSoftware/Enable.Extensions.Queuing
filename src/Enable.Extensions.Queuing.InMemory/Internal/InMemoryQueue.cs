@@ -10,10 +10,15 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
     internal class InMemoryQueue
     {
         private readonly ConcurrentQueue<IQueueMessage> _queue = new ConcurrentQueue<IQueueMessage>();
-
+        private readonly InMemoryQueueClient _queueClient;
         private int _referenceCount = 0;
 
         private Func<IQueueMessage, CancellationToken, Task> _messageHandler;
+
+        public InMemoryQueue(InMemoryQueueClient queueClient)
+        {
+            _queueClient = queueClient ?? throw new ArgumentNullException(nameof(queueClient));
+        }
 
         public bool TryDequeue(out IQueueMessage message)
         {
@@ -24,7 +29,16 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             _queue.Enqueue(message);
 
-            _messageHandler?.Invoke(message, CancellationToken.None);
+            try
+            {
+                _messageHandler?.Invoke(message, CancellationToken.None);
+                Task.Run(async () => await _queueClient.CompleteAsync(message)).Wait();
+            }
+            catch
+            {
+                Task.Run(async () => await _queueClient.AbandonAsync(message)).Wait();
+                throw;
+            }
         }
 
         public void Clear()
