@@ -28,7 +28,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         public void Enqueue(IQueueMessage message)
         {
             _queue.Enqueue(message);
-
+            
             try
             {
                 _messageHandler?.Invoke(message, CancellationToken.None);

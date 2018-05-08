@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Enable.Extensions.Queuing.InMemory\Enable.Extensions.Queuing.InMemory.csproj" />
+    <ProjectReference Include="..\Enable.Extensions.Queuing.TestUtils\Enable.Extensions.Queuing.TestUtils.csproj" />
   </ItemGroup>
 
   <ItemGroup>

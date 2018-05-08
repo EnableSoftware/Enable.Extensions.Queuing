@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
+using Enable.Extensions.Queuing.TestUtils;
 using Xunit;
 
 namespace Enable.Extensions.Queuing.AzureStorage.Tests
@@ -31,6 +32,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
             _queueName = Guid.NewGuid().ToString();
 
             _sut = queueFactory.GetQueueReference(_queueName);
+
+            _sut.Clear().GetAwaiter().GetResult();
         }
 
         [Fact]

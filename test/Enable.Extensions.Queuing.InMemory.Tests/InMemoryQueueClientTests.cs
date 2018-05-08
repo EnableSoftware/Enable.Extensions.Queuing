@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
+using Enable.Extensions.Queuing.TestUtils;
 using Xunit;
 
 namespace Enable.Extensions.Queuing.InMemory.Tests
@@ -19,6 +20,8 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
             var queueName = Guid.NewGuid().ToString();
 
             _sut = queueFactory.GetQueueReference(queueName);
+
+            _sut.Clear().GetAwaiter().GetResult();
         }
 
         [Fact]

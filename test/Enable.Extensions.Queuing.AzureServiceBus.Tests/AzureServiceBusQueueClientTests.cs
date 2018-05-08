@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
+using Enable.Extensions.Queuing.TestUtils;
 using Xunit;
 
 namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
@@ -27,6 +28,19 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             var queueName = _fixture.QueueName;
 
             _sut = queueFactory.GetQueueReference(queueName);
+
+            _sut.Clear().GetAwaiter().GetResult();
+        }
+
+        [Fact]
+        public async Task DequeueAsync_ReturnsNullIfNoMessageEnqueued()
+        {
+            // Arrange
+            // Act
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+
+            // Assert
+            Assert.Null(message);
         }
 
         [Fact]
@@ -125,7 +139,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(1000));
+            Assert.True(evt.WaitOne(5000));
         }
 
         [Fact]

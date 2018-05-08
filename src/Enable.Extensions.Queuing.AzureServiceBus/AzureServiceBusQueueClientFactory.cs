@@ -30,11 +30,16 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
                 throw new ArgumentException(nameof(queueName));
             }
 
+            var options = new AzureServiceBusQueueClientOptions
+            {
+                MaxConcurrentCalls = _options.MaxConcurrentCalls,
+                ExceptionReceivedHandler = _options.ExceptionReceivedHandler
+            };
+
             return new AzureServiceBusQueueClient(
                 _options.ConnectionString,
                 queueName,
-                _options.MaxConcurrentCalls,
-                _options.ExceptionReceivedHandler);
+                options);
         }
     }
 }

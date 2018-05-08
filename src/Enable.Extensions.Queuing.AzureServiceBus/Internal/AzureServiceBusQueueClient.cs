@@ -7,10 +7,11 @@ using Microsoft.Azure.ServiceBus.Core;
 
 namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 {
+    // TODO Respect cancellationToken
     public class AzureServiceBusQueueClient : BaseQueueClient
     {
         private readonly string _connectionString;
-        private readonly string _queueName;
+        private readonly string _entityName;
         private readonly int _maxConcurrentCalls;
         private readonly Func<ExceptionReceivedEventArgs, Task> _exceptionReceivedHandler;
         private readonly MessageReceiver _messageReceiver;
@@ -20,21 +21,20 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
         public AzureServiceBusQueueClient(
             string connectionString,
-            string queueName,
-            int maxConcurrentCalls,
-            Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+            string entityName,
+            AzureServiceBusQueueClientOptions options)
         {
             _connectionString = connectionString;
-            _queueName = queueName;
-            _maxConcurrentCalls = maxConcurrentCalls;
-            _exceptionReceivedHandler = exceptionReceivedHandler ?? ((args) => Task.CompletedTask);
+            _entityName = entityName;
+            _maxConcurrentCalls = options?.MaxConcurrentCalls ?? 0;
+            _exceptionReceivedHandler = options?.ExceptionReceivedHandler ?? ((args) => Task.CompletedTask);
 
             _messageReceiver = new MessageReceiver(
                     connectionString,
-                    queueName,
+                    entityName,
                     ReceiveMode.PeekLock);
 
-            _messageSender = new MessageSender(connectionString, queueName);
+            _messageSender = new MessageSender(connectionString, entityName);
         }
 
         public override Task AbandonAsync(
@@ -54,7 +54,9 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         public override async Task<IQueueMessage> DequeueAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var message = await _messageReceiver.ReceiveAsync();
+            // This timeout is arbitrary. It is needed in order to return null if no message,
+            // and must be long enough to allow time for connection setup.
+            var message = await _messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(3));
 
             if (message == null)
             {
