@@ -55,35 +55,42 @@ namespace Enable.Extensions.Queuing.Discovery.Tests
             IQueueClientFactory queueClientFactory = new InMemoryQueueClientFactory();
             var queueClient = queueClientFactory.GetQueueReference(QueueName);
 
+            var message = new TestDto
+            {
+                TestProperty = fixture.Create<string>()
+            };
+
             var job = new Mock<TestJob>();
             job.Setup(o => o.RunAsync(It.IsAny<TestDto>()));
 
             var services = new ServiceCollection();
-            services.AddSingleton(job);
+            services.AddSingleton(job.Object);
             services.AddSingleton(queueClientFactory);
             services.AddSingleton<QueueManager>();
             var serviceProvider = services.BuildServiceProvider();
 
             await serviceProvider.DiscoverMessageHandlers(Assembly.GetAssembly(typeof(TestJob)));
 
-            var message = new TestDto
-            {
-                TestProperty = fixture.Create<string>()
-            };
-
             // Act
             await queueClient.EnqueueAsync(message);
 
             // Assert
-            job.Verify(o => o.RunAsync(It.IsAny<TestDto>()), Times.Once);
+            job.Verify(o => o.RunAsync(It.Is<TestDto>(p => p.Equals(message))), Times.Once);
         }
 
-        private class TestDto
+        public class TestDto : IEquatable<TestDto>
         {
             public string TestProperty { get; set; }
+
+            public bool Equals(TestDto other)
+            {
+                return other != null
+                    && (ReferenceEquals(this, other)
+                    || string.Equals(TestProperty, other.TestProperty, StringComparison.Ordinal));
+            }
         }
 
-        private class TestJob
+        public class TestJob
         {
             [MessageHandler(QueueName)]
             public virtual Task RunAsync(TestDto dto)
