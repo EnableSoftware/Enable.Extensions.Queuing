@@ -8,6 +8,7 @@ using Enable.Extensions.Queuing.Abstractions;
 
 namespace Enable.Extensions.Queuing.Discovery
 {
+    // TODO Console WriteLine on discover message handler.
     public static class MessageHandlerDiscovery
     {
         public static async Task RegisterMessageHandler<TService, TMessage>(
