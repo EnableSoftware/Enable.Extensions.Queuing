@@ -32,7 +32,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             _messageReceiver = new MessageReceiver(
                     connectionString,
                     entityName,
-                    ReceiveMode.PeekLock);
+                    ReceiveMode.PeekLock,
+                    prefetchCount: options?.PrefetchCount ?? 0);
 
             _messageSender = new MessageSender(connectionString, entityName);
         }

@@ -8,5 +8,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
     {
         public int MaxConcurrentCalls { get; set; }
         public Func<ExceptionReceivedEventArgs, Task> ExceptionReceivedHandler { get; set; }
+        public int PrefetchCount { get; set; }
     }
 }

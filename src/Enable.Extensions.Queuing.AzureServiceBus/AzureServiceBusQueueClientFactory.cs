@@ -33,7 +33,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
             var options = new AzureServiceBusQueueClientOptions
             {
                 MaxConcurrentCalls = _options.MaxConcurrentCalls,
-                ExceptionReceivedHandler = _options.ExceptionReceivedHandler
+                ExceptionReceivedHandler = _options.ExceptionReceivedHandler,
+                PrefetchCount = _options.PrefetchCount
             };
 
             return new AzureServiceBusQueueClient(
