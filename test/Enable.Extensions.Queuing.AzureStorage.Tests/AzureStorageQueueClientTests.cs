@@ -49,9 +49,6 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
         [Fact]
         public async Task DequeueAsync_CanInvoke()
         {
-            // Arrange
-            var content = Guid.NewGuid().ToString();
-
             // Act
             var message = await _sut.DequeueAsync(CancellationToken.None);
 

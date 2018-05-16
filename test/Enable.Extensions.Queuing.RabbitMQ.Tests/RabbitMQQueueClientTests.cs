@@ -5,42 +5,38 @@ using Enable.Extensions.Queuing.Abstractions;
 using Enable.Extensions.Queuing.TestUtils;
 using Xunit;
 
-namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
+namespace Enable.Extensions.Queuing.RabbitMQ.Tests
 {
-    public class AzureServiceBusQueueClientTests : IClassFixture<AzureServiceBusTestFixture>, IDisposable
+    public class RabbitMQQueueClientTests : IClassFixture<RabbitMQTestFixture>, IDisposable
     {
-        private readonly AzureServiceBusTestFixture _fixture;
+        private readonly RabbitMQTestFixture _fixture;
+
+        private readonly string _queueName;
+
         private readonly IQueueClient _sut;
 
         private bool _disposed;
 
-        public AzureServiceBusQueueClientTests(AzureServiceBusTestFixture fixture)
+        public RabbitMQQueueClientTests(RabbitMQTestFixture fixture)
         {
             _fixture = fixture;
 
-            var options = new AzureServiceBusQueueClientFactoryOptions
+            var options = new RabbitMQQueueClientFactoryOptions
             {
-                ConnectionString = _fixture.ConnectionString
+                HostName = _fixture.HostName,
+                Port = _fixture.Port,
+                VirtualHost = _fixture.VirtualHost,
+                UserName = _fixture.UserName,
+                Password = _fixture.Password
             };
 
-            var queueFactory = new AzureServiceBusQueueClientFactory(options);
+            var queueFactory = new RabbitMQQueueClientFactory(options);
 
-            var queueName = _fixture.QueueName;
+            _queueName = Guid.NewGuid().ToString();
 
-            _sut = queueFactory.GetQueueReference(queueName);
+            _sut = queueFactory.GetQueueReference(_queueName);
 
             _sut.Clear().GetAwaiter().GetResult();
-        }
-
-        [Fact]
-        public async Task DequeueAsync_ReturnsNullIfNoMessageEnqueued()
-        {
-            // Arrange
-            // Act
-            var message = await _sut.DequeueAsync(CancellationToken.None);
-
-            // Assert
-            Assert.Null(message);
         }
 
         [Fact]
@@ -76,9 +72,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.NotNull(message);
-
-            // Clean up
-            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -94,9 +87,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.Equal(content, message.GetBody<string>());
-
-            // Clean up
-            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -111,10 +101,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.AbandonAsync(message, CancellationToken.None);
-
-            // Clean up
-            message = await _sut.DequeueAsync(CancellationToken.None);
-            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -132,37 +118,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         }
 
         [Fact]
-        public async Task RegisterMessageHandler_CanInvoke()
-        {
-            // Act
-            await _sut.RegisterMessageHandler(
-                (message, cancellationToken) => throw new Exception("There should be no messages to process."));
-        }
-
-        [Fact]
-        public async Task RegisterMessageHandler_MessageHandlerInvoked()
-        {
-            // Arrange
-            var evt = new ManualResetEvent(false);
-
-            Task handler(IQueueMessage message, CancellationToken cancellationToken)
-            {
-                evt.Set();
-                return Task.CompletedTask;
-            }
-
-            await _sut.RegisterMessageHandler(handler);
-
-            // Act
-            await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
-                CancellationToken.None);
-
-            // Assert
-            Assert.True(evt.WaitOne(5000));
-        }
-
-        [Fact]
         public async Task RenewLockAsync_CanInvoke()
         {
             // Arrange
@@ -173,10 +128,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             var message = await _sut.DequeueAsync(CancellationToken.None);
 
             // Act
-            await _sut.RenewLockAsync(message, CancellationToken.None);
+            var exception = await Record.ExceptionAsync(() => _sut.RenewLockAsync(message, CancellationToken.None));
 
-            // Clean up
-            await _sut.CompleteAsync(message, CancellationToken.None);
+            // Assert
+            Assert.IsType<NotImplementedException>(exception);
         }
 
         public void Dispose()
@@ -189,6 +144,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             if (!_disposed)
             {
+                try
+                {
+                    // Make a best effort to remove our temporary test queue.
+                    _fixture.DeleteQueue(_queueName);
+                }
+                catch
+                {
+                }
+
                 if (disposing)
                 {
                     _sut.Dispose();

@@ -108,6 +108,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 result = _channel.BasicGet(_queueName, autoAck: false);
             }
 
+            if (result == null)
+            {
+                return Task.FromResult<IQueueMessage>(null);
+            }
+
             var message = new RabbitMQQueueMessage(
                 result.Body,
                 result.DeliveryTag,
