@@ -108,6 +108,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 result = _channel.BasicGet(_queueName, autoAck: false);
             }
 
+            if (result == null)
+            {
+                return Task.FromResult<IQueueMessage>(null);
+            }
+
             var message = new RabbitMQQueueMessage(
                 result.Body,
                 result.DeliveryTag,
@@ -135,7 +140,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             return Task.CompletedTask;
         }
 
-        // TODO Auto-complete
         public override Task RegisterMessageHandler(
             Func<IQueueMessage, CancellationToken, Task> handler)
         {
@@ -143,10 +147,23 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
             consumer.Received += (channel, eventArgs) =>
             {
+                var cancellationToken = CancellationToken.None;
+
                 var message = new RabbitMQQueueMessage(
                     eventArgs.Body,
                     eventArgs.DeliveryTag,
                     eventArgs.BasicProperties);
+
+                try
+                {
+                    handler(message, cancellationToken).GetAwaiter().GetResult();
+                    CompleteAsync(message, cancellationToken).GetAwaiter().GetResult();
+                }
+                catch
+                {
+                    AbandonAsync(message, cancellationToken).GetAwaiter().GetResult();
+                    throw;
+                }
             };
 
             lock (_channel)
