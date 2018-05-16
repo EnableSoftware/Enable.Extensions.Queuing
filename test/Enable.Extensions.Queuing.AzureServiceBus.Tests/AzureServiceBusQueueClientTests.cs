@@ -30,6 +30,26 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         }
 
         [Fact]
+        public async Task EnqueueAsync_CanInvoke()
+        {
+            // Arrange
+            var content = Guid.NewGuid().ToString();
+
+            // Act
+            await _sut.EnqueueAsync(content, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task DequeueAsync_CanInvoke()
+        {
+            // Act
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+
+            // Assert
+            Assert.Null(message);
+        }
+
+        [Fact]
         public async Task DequeueAsync_ReturnsEnqueuedMessage()
         {
             // Arrange
