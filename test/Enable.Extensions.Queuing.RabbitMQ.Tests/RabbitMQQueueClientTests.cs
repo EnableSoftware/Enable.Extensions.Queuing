@@ -118,6 +118,37 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
         }
 
         [Fact]
+        public async Task RegisterMessageHandler_CanInvoke()
+        {
+            // Act
+            await _sut.RegisterMessageHandler(
+                (message, cancellationToken) => throw new Exception("There should be no messages to process."));
+        }
+
+        [Fact]
+        public async Task RegisterMessageHandler_MessageHandlerInvoked()
+        {
+            // Arrange
+            var evt = new ManualResetEvent(false);
+
+            Task handler(IQueueMessage message, CancellationToken cancellationToken)
+            {
+                evt.Set();
+                return Task.CompletedTask;
+            }
+
+            await _sut.RegisterMessageHandler(handler);
+
+            // Act
+            await _sut.EnqueueAsync(
+                Guid.NewGuid().ToString(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.True(evt.WaitOne(1000));
+        }
+
+        [Fact]
         public async Task RenewLockAsync_CanInvoke()
         {
             // Arrange
