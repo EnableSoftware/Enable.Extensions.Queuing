@@ -21,19 +21,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.RabbitMQ", "src\Enable.Extensions.Queuing.RabbitMQ\Enable.Extensions.Queuing.RabbitMQ.csproj", "{DB0152B0-6061-4AF8-87C6-207A5FB88245}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enable.Extensions.Queuing.InMemory", "src\Enable.Extensions.Queuing.InMemory\Enable.Extensions.Queuing.InMemory.csproj", "{C0322295-7F44-4DA1-BF59-1BF61096EC3E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.InMemory", "src\Enable.Extensions.Queuing.InMemory\Enable.Extensions.Queuing.InMemory.csproj", "{C0322295-7F44-4DA1-BF59-1BF61096EC3E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{10ED950A-E129-4E18-85B7-C18907703918}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enable.Extensions.Queuing.InMemory.Tests", "test\Enable.Extensions.Queuing.InMemory.Tests\Enable.Extensions.Queuing.InMemory.Tests.csproj", "{B12ECE97-C60D-40A5-AF19-9F8BE5B3D043}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.InMemory.Tests", "test\Enable.Extensions.Queuing.InMemory.Tests\Enable.Extensions.Queuing.InMemory.Tests.csproj", "{B12ECE97-C60D-40A5-AF19-9F8BE5B3D043}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.AzureServiceBus", "src\Enable.Extensions.Queuing.AzureServiceBus\Enable.Extensions.Queuing.AzureServiceBus.csproj", "{5DBB108B-608B-44CC-997C-074B78E0E288}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.AzureStorage", "src\Enable.Extensions.Queuing.AzureStorage\Enable.Extensions.Queuing.AzureStorage.csproj", "{EB32A2DA-E687-475B-9255-3278DE29F2D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enable.Extensions.Queuing.AzureServiceBus.Tests", "test\Enable.Extensions.Queuing.AzureServiceBus.Tests\Enable.Extensions.Queuing.AzureServiceBus.Tests.csproj", "{888F3DBF-D5BE-406E-A341-527BF4C58013}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.AzureServiceBus.Tests", "test\Enable.Extensions.Queuing.AzureServiceBus.Tests\Enable.Extensions.Queuing.AzureServiceBus.Tests.csproj", "{888F3DBF-D5BE-406E-A341-527BF4C58013}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enable.Extensions.Queuing.AzureStorage.Tests", "test\Enable.Extensions.Queuing.AzureStorage.Tests\Enable.Extensions.Queuing.AzureStorage.Tests.csproj", "{956F2A2D-81F7-4490-8A5C-3563A978B407}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.AzureStorage.Tests", "test\Enable.Extensions.Queuing.AzureStorage.Tests\Enable.Extensions.Queuing.AzureStorage.Tests.csproj", "{956F2A2D-81F7-4490-8A5C-3563A978B407}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.RabbitMQ.Tests", "test\Enable.Extensions.Queuing.RabbitMQ.Tests\Enable.Extensions.Queuing.RabbitMQ.Tests.csproj", "{9649C1D8-5A40-4CFD-A851-94863FE24DD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,6 +75,10 @@ Global
 		{956F2A2D-81F7-4490-8A5C-3563A978B407}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{956F2A2D-81F7-4490-8A5C-3563A978B407}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{956F2A2D-81F7-4490-8A5C-3563A978B407}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9649C1D8-5A40-4CFD-A851-94863FE24DD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9649C1D8-5A40-4CFD-A851-94863FE24DD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9649C1D8-5A40-4CFD-A851-94863FE24DD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9649C1D8-5A40-4CFD-A851-94863FE24DD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +92,7 @@ Global
 		{EB32A2DA-E687-475B-9255-3278DE29F2D3} = {5E460909-2E66-4038-A5D0-0F7DDEE06FEC}
 		{888F3DBF-D5BE-406E-A341-527BF4C58013} = {10ED950A-E129-4E18-85B7-C18907703918}
 		{956F2A2D-81F7-4490-8A5C-3563A978B407} = {10ED950A-E129-4E18-85B7-C18907703918}
+		{9649C1D8-5A40-4CFD-A851-94863FE24DD5} = {10ED950A-E129-4E18-85B7-C18907703918}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AE61406A-5002-4A85-9F7C-2BEE86711A27}

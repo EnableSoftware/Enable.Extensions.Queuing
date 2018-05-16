@@ -22,6 +22,10 @@ build:
   publish_nuget: true
   verbosity: minimal
 
+before_test: 
+  - choco install rabbitmq --ignoredependencies -y 
+  - ps: (Get-Service -Name RabbitMQ).Status
+
 test:
   assemblies: '**\*.Tests.dll'
 
