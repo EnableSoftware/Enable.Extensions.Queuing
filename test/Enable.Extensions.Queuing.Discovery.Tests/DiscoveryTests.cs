@@ -8,6 +8,8 @@ using AutoFixture;
 using Enable.Extensions.Queuing.Abstractions;
 using Enable.Extensions.Queuing.InMemory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Internal;
 using Moq;
 using Xunit;
 
@@ -43,6 +45,44 @@ namespace Enable.Extensions.Queuing.Discovery.Tests
 
             queueClient.Verify(
                 o => o.RegisterMessageHandler(It.IsAny<Func<IQueueMessage, CancellationToken, Task>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task DiscoverMessageHandlers_LogsDiscoveredHandlers()
+        {
+            // Arrange
+            var logger = new Mock<ILogger>();
+            var loggerProvider = new Mock<ILoggerProvider>();
+            loggerProvider.Setup(o => o.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+
+            var queueClient = new Mock<IQueueClient>();
+            var queueClientFactory = new Mock<IQueueClientFactory>();
+            queueClientFactory.Setup(o => o.GetQueueReference(QueueName)).Returns(queueClient.Object);
+
+            var services = new ServiceCollection();
+            services.AddSingleton(new TestJob());
+            services.AddSingleton(queueClientFactory.Object);
+            services.AddSingleton<QueueManager>();
+            services.AddLogging(builder =>
+            {
+                builder.AddProvider(loggerProvider.Object);
+            });
+            var serviceProvider = services.BuildServiceProvider();
+
+            // Act
+            await serviceProvider.DiscoverMessageHandlers(Assembly.GetAssembly(typeof(TestJob)));
+
+            // Assert
+            var expectedMessage = $"Registering discovered message handler {nameof(TestJob)}.{nameof(TestJob.RunAsync)}({nameof(TestDto)}) for queue \"{QueueName}\"";
+
+            logger.Verify(
+                o => o.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<FormattedLogValues>(v => v.ToString().Equals(expectedMessage, StringComparison.Ordinal)),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<object, Exception, string>>()),
                 Times.Once);
         }
 

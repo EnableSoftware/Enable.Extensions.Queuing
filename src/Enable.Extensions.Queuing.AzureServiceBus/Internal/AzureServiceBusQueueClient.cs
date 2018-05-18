@@ -7,7 +7,6 @@ using Microsoft.Azure.ServiceBus.Core;
 
 namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 {
-    // TODO Respect cancellationToken
     public class AzureServiceBusQueueClient : BaseQueueClient
     {
         private readonly string _connectionString;

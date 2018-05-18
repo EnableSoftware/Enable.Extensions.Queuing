@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace Enable.Extensions.Queuing.Discovery
 {
@@ -66,7 +67,7 @@ namespace Enable.Extensions.Queuing.Discovery
 
             await queueClient.RegisterMessageHandler(handler).ConfigureAwait(false);
         }
-        
+
         public static async Task DiscoverMessageHandlers(
             this IServiceProvider services,
             Assembly assembly)
@@ -81,6 +82,9 @@ namespace Enable.Extensions.Queuing.Discovery
                 throw new ArgumentNullException(nameof(assembly));
             }
 
+            var loggerFactory = (ILoggerFactory)services.GetService(typeof(ILoggerFactory));
+            var logger = loggerFactory?.CreateLogger(typeof(MessageHandlerDiscovery).FullName);
+
             var handlers = from t in assembly.GetTypes()
                            from m in t.GetMethods()
                            let a = m.GetCustomAttribute<MessageHandlerAttribute>()
@@ -94,7 +98,7 @@ namespace Enable.Extensions.Queuing.Discovery
 
             foreach (var handler in handlers)
             {
-                await services.RegisterDiscoveredMessageHandler(handler.Type, handler.Method, handler.Attribute).ConfigureAwait(false);
+                await services.RegisterDiscoveredMessageHandler(handler.Type, handler.Method, handler.Attribute, logger).ConfigureAwait(false);
             }
         }
 
@@ -102,7 +106,8 @@ namespace Enable.Extensions.Queuing.Discovery
             this IServiceProvider services,
             Type serviceType,
             MethodInfo method,
-            MessageHandlerAttribute attribute)
+            MessageHandlerAttribute attribute,
+            ILogger logger)
         {
             if (services == null)
             {
@@ -131,7 +136,14 @@ namespace Enable.Extensions.Queuing.Discovery
                 throw new Exception("Message handler method must have one parameter.");
             }
 
+            var entityPath = attribute.EntityPath;
             var messageType = methodParameters[0].ParameterType;
+
+            if (logger != null)
+            {
+                var logMessage = $"Registering discovered message handler {serviceType.Name}.{method.Name}({messageType.Name}) for queue \"{entityPath}\"";
+                logger.LogInformation(logMessage);
+            }
 
             var exprService = Expression.Parameter(serviceType, "service");
             var exprMessage = Expression.Parameter(messageType, "message");
@@ -145,7 +157,7 @@ namespace Enable.Extensions.Queuing.Discovery
                 .GetMethod(nameof(RegisterMessageHandler))
                 .MakeGenericMethod(serviceType, messageType);
 
-            var registerTask = (Task)register.Invoke(null, new object[] { services, attribute.EntityPath, handler });
+            var registerTask = (Task)register.Invoke(null, new object[] { services, entityPath, handler });
 
             await registerTask.ConfigureAwait(false);
         }

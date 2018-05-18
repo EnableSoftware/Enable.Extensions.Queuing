@@ -22,7 +22,7 @@ namespace Enable.Extensions.Queuing.Discovery
         {
             if (_disposed)
             {
-                throw new InvalidOperationException();
+                throw new ObjectDisposedException(GetType().FullName);
             }
 
             return _queueClients.GetOrAdd(
