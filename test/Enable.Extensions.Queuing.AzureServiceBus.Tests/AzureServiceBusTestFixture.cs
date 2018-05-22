@@ -35,7 +35,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             {
                 messages = await messageReceiver.ReceiveAsync(maxMessageCount: 256);
             }
-            while (messages.Count > 0);
+            while (messages?.Count > 0);
         }
 
         private static string GetEnvironmentVariable(string name)
