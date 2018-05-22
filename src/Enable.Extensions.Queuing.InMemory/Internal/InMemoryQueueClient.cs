@@ -28,6 +28,8 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
         private readonly InMemoryQueue _queue;
 
+        private readonly string _queueName;
+
         private bool _disposed;
 
         public InMemoryQueueClient(string queueName)
@@ -45,6 +47,8 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
                     oldValue.IncrementReferenceCount();
                     return oldValue;
                 });
+
+            _queueName = queueName;
         }
 
         public override Task AbandonAsync(
@@ -108,7 +112,10 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
                     if (referenceCount == 0)
                     {
+                        // Clear and remove the queue if there are no longer
+                        // any references to it.
                         _queue.Clear();
+                        _queues.TryRemove(_queueName, out _);
                     }
                 }
 
