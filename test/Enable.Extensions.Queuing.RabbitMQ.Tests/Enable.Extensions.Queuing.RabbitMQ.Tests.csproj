@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Enable.Extensions.Queuing.RabbitMQ\Enable.Extensions.Queuing.RabbitMQ.csproj" />
-    <ProjectReference Include="..\Enable.Extensions.Queuing.TestUtils\Enable.Extensions.Queuing.TestUtils.csproj" />
   </ItemGroup>
 
   <ItemGroup>

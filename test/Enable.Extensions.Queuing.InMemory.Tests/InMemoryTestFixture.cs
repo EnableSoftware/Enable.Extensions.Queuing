@@ -2,12 +2,18 @@ using System;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
 
-namespace Enable.Extensions.Queuing.TestUtils
+namespace Enable.Extensions.Queuing.InMemory.Tests
 {
-    public static class QueueClientExtensions
+    public class InMemoryTestFixture
     {
-        public static async Task Clear(this IQueueClient queueClient)
+        public string QueueName { get; } = Guid.NewGuid().ToString();
+
+        public async Task ClearQueue()
         {
+            var queueFactory = new InMemoryQueueClientFactory();
+
+            var queueClient = queueFactory.GetQueueReference(QueueName);
+
             try
             {
                 IQueueMessage message;

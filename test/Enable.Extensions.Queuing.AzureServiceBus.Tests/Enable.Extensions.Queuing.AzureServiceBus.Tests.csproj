@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Enable.Extensions.Queuing.AzureServiceBus\Enable.Extensions.Queuing.AzureServiceBus.csproj" />
-    <ProjectReference Include="..\Enable.Extensions.Queuing.TestUtils\Enable.Extensions.Queuing.TestUtils.csproj" />
   </ItemGroup>
 
   <ItemGroup>

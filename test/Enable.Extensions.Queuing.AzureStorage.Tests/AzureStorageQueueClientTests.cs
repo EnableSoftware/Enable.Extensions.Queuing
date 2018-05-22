@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
-using Enable.Extensions.Queuing.TestUtils;
 using Xunit;
 
 namespace Enable.Extensions.Queuing.AzureStorage.Tests
@@ -11,29 +10,25 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
     {
         private readonly AzureStorageTestFixture _fixture;
 
-        private readonly string _queueName;
-
         private readonly IQueueClient _sut;
 
         private bool _disposed;
 
         public AzureStorageQueueClientTests(AzureStorageTestFixture fixture)
         {
-            _fixture = fixture;
-
             var options = new AzureStorageQueueClientFactoryOptions
             {
-                AccountName = _fixture.AccountName,
-                AccountKey = _fixture.AccountKey,
+                AccountName = fixture.AccountName,
+                AccountKey = fixture.AccountKey
             };
 
             var queueFactory = new AzureStorageQueueClientFactory(options);
 
-            _queueName = Guid.NewGuid().ToString();
+            _sut = queueFactory.GetQueueReference(fixture.QueueName);
 
-            _sut = queueFactory.GetQueueReference(_queueName);
+            fixture.ClearQueue().GetAwaiter().GetResult();
 
-            _sut.Clear().GetAwaiter().GetResult();
+            _fixture = fixture;
         }
 
         [Fact]
@@ -169,19 +164,19 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
         {
             if (!_disposed)
             {
-                try
-                {
-                    // Make a best effort to remove our temporary test queue.
-                    _fixture.DeleteQueue(_queueName)
-                        .GetAwaiter()
-                        .GetResult();
-                }
-                catch
-                {
-                }
-
                 if (disposing)
                 {
+                    try
+                    {
+                        // Make a best effort to clear our test queue.
+                        _fixture.ClearQueue()
+                            .GetAwaiter()
+                            .GetResult();
+                    }
+                    catch
+                    {
+                    }
+
                     _sut.Dispose();
                 }
 
