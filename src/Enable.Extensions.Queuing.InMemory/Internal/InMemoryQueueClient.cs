@@ -41,7 +41,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             // queues for the same `queueName` are disposed.
             _queue = _queues.AddOrUpdate(
                 queueName,
-                new InMemoryQueue(this),
+                new InMemoryQueue(),
                 (key, oldValue) =>
                 {
                     oldValue.IncrementReferenceCount();
@@ -96,6 +96,8 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         public override Task RegisterMessageHandler(
             Func<IQueueMessage, CancellationToken, Task> handler)
         {
+            ThrowIfDisposed();
+
             _queue.RegisterMessageHandler(handler);
 
             return Task.CompletedTask;
