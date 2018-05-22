@@ -25,8 +25,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             _sut = queueFactory.GetQueueReference(fixture.QueueName);
 
-            fixture.ClearQueue().GetAwaiter().GetResult();
-
             _fixture = fixture;
         }
 
@@ -134,6 +132,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             {
                 if (disposing)
                 {
+                    _sut.Dispose();
+
                     try
                     {
                         // Make a best effort to clear our test queue.
@@ -144,8 +144,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
                     catch
                     {
                     }
-
-                    _sut.Dispose();
                 }
 
                 _disposed = true;

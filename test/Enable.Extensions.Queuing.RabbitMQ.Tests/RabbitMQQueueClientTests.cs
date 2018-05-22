@@ -29,8 +29,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
 
             _sut = queueFactory.GetQueueReference(fixture.QueueName);
 
-            fixture.ClearQueue();
-
             _fixture = fixture;
         }
 
@@ -141,6 +139,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
             {
                 if (disposing)
                 {
+                    // With the RabbitMQ implementation, we must disconnect
+                    // our consumer before purging the queue, otherwise,
+                    // purging the queue won't remove unacked messages.
+                    _sut.Dispose();
+
                     try
                     {
                         // Make a best effort to clear our test queue.
@@ -149,8 +152,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
                     catch
                     {
                     }
-
-                    _sut.Dispose();
                 }
 
                 _disposed = true;
