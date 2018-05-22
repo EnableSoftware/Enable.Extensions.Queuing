@@ -33,7 +33,9 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             do
             {
-                messages = await messageReceiver.ReceiveAsync(maxMessageCount: 256);
+                messages = await messageReceiver.ReceiveAsync(
+                    maxMessageCount: 256,
+                    operationTimeout: TimeSpan.FromSeconds(10));
             }
             while (messages?.Count > 0);
         }
