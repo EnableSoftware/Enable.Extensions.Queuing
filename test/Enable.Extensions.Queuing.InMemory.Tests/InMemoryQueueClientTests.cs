@@ -115,12 +115,12 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
         public async Task RegisterMessageHandler_MessageHandlerInvoked()
         {
             // Arrange
-            var messageHandled = false;
+            var evt = new ManualResetEvent(false);
 
             Func<IQueueMessage, CancellationToken, Task> handler
                 = (message, cancellationToken) =>
                 {
-                    messageHandled = true;
+                    evt.Set();
                     return Task.CompletedTask;
                 };
 
@@ -132,7 +132,7 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(messageHandled);
+            Assert.True(evt.WaitOne(1000));
         }
 
         [Fact]

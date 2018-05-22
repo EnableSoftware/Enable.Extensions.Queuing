@@ -136,7 +136,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(5000));
+            Assert.True(evt.WaitOne(1000));
         }
 
         [Fact]
