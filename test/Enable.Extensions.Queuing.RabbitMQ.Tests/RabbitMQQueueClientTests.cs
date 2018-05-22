@@ -10,30 +10,28 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
     {
         private readonly RabbitMQTestFixture _fixture;
 
-        private readonly string _queueName;
-
         private readonly IQueueClient _sut;
 
         private bool _disposed;
 
         public RabbitMQQueueClientTests(RabbitMQTestFixture fixture)
         {
-            _fixture = fixture;
-
             var options = new RabbitMQQueueClientFactoryOptions
             {
-                HostName = _fixture.HostName,
-                Port = _fixture.Port,
-                VirtualHost = _fixture.VirtualHost,
-                UserName = _fixture.UserName,
-                Password = _fixture.Password
+                HostName = fixture.HostName,
+                Port = fixture.Port,
+                VirtualHost = fixture.VirtualHost,
+                UserName = fixture.UserName,
+                Password = fixture.Password
             };
 
             var queueFactory = new RabbitMQQueueClientFactory(options);
 
-            _queueName = Guid.NewGuid().ToString();
+            _sut = queueFactory.GetQueueReference(fixture.QueueName);
 
-            _sut = queueFactory.GetQueueReference(_queueName);
+            fixture.ClearQueue();
+
+            _fixture = fixture;
         }
 
         [Fact]
@@ -141,17 +139,17 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
         {
             if (!_disposed)
             {
-                try
-                {
-                    // Make a best effort to remove our temporary test queue.
-                    _fixture.DeleteQueue(_queueName);
-                }
-                catch
-                {
-                }
-
                 if (disposing)
                 {
+                    try
+                    {
+                        // Make a best effort to clear our test queue.
+                        _fixture.ClearQueue();
+                    }
+                    catch
+                    {
+                    }
+
                     _sut.Dispose();
                 }
 

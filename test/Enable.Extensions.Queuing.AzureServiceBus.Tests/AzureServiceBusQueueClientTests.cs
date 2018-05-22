@@ -9,24 +9,25 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
     public class AzureServiceBusQueueClientTests : IClassFixture<AzureServiceBusTestFixture>, IDisposable
     {
         private readonly AzureServiceBusTestFixture _fixture;
+
         private readonly IQueueClient _sut;
 
         private bool _disposed;
 
         public AzureServiceBusQueueClientTests(AzureServiceBusTestFixture fixture)
         {
-            _fixture = fixture;
-
             var options = new AzureServiceBusQueueClientFactoryOptions
             {
-                ConnectionString = _fixture.ConnectionString
+                ConnectionString = fixture.ConnectionString
             };
 
             var queueFactory = new AzureServiceBusQueueClientFactory(options);
 
-            var queueName = _fixture.QueueName;
+            _sut = queueFactory.GetQueueReference(fixture.QueueName);
 
-            _sut = queueFactory.GetQueueReference(queueName);
+            fixture.ClearQueue().GetAwaiter().GetResult();
+
+            _fixture = fixture;
         }
 
         [Fact]
@@ -62,9 +63,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.NotNull(message);
-
-            // Clean up
-            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -80,9 +78,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.Equal(content, message.GetBody<string>());
-
-            // Clean up
-            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -97,10 +92,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.AbandonAsync(message, CancellationToken.None);
-
-            // Clean up
-            message = await _sut.DequeueAsync(CancellationToken.None);
-            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -129,9 +120,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.RenewLockAsync(message, CancellationToken.None);
-
-            // Clean up
-            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         public void Dispose()
@@ -146,6 +134,17 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             {
                 if (disposing)
                 {
+                    try
+                    {
+                        // Make a best effort to clear our test queue.
+                        _fixture.ClearQueue()
+                            .GetAwaiter()
+                            .GetResult();
+                    }
+                    catch
+                    {
+                    }
+
                     _sut.Dispose();
                 }
 

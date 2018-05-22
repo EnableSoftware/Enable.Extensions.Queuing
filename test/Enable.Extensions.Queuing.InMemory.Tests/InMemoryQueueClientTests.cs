@@ -6,19 +6,23 @@ using Xunit;
 
 namespace Enable.Extensions.Queuing.InMemory.Tests
 {
-    public class InMemoryQueueClientTests : IDisposable
+    public class InMemoryQueueClientTests : IClassFixture<InMemoryTestFixture>, IDisposable
     {
+        private readonly InMemoryTestFixture _fixture;
+
         private readonly IQueueClient _sut;
 
         private bool _disposed;
 
-        public InMemoryQueueClientTests()
+        public InMemoryQueueClientTests(InMemoryTestFixture fixture)
         {
             var queueFactory = new InMemoryQueueClientFactory();
 
-            var queueName = Guid.NewGuid().ToString();
+            _sut = queueFactory.GetQueueReference(fixture.QueueName);
 
-            _sut = queueFactory.GetQueueReference(queueName);
+            fixture.ClearQueue().GetAwaiter().GetResult();
+
+            _fixture = fixture;
         }
 
         [Fact]
@@ -172,6 +176,17 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
             {
                 if (disposing)
                 {
+                    try
+                    {
+                        // Make a best effort to clear our test queue.
+                        _fixture.ClearQueue()
+                            .GetAwaiter()
+                            .GetResult();
+                    }
+                    catch
+                    {
+                    }
+
                     _sut.Dispose();
                 }
 
