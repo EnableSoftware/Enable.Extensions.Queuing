@@ -58,8 +58,17 @@ namespace Enable.Extensions.Queuing.Abstractions
             return EnqueueAsync(message, cancellationToken);
         }
 
+        public Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> messageHandler)
+        {
+            var messageHandlerOptions = new MessageHandlerOptions();
+
+            return RegisterMessageHandler(messageHandler, messageHandlerOptions);
+        }
+
         public abstract Task RegisterMessageHandler(
-            Func<IQueueMessage, CancellationToken, Task> handler);
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions);
 
         public abstract Task RenewLockAsync(
             IQueueMessage message,

@@ -46,7 +46,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             });
         }
 
-        public MessageReceiver MessageReceiver { get => _messageReceiver; }
+        internal MessageReceiver MessageReceiver { get => _messageReceiver; }
 
         public override Task AbandonAsync(
             IQueueMessage message,
@@ -162,7 +162,9 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             message = new AzureStorageQueueMessage(cloudQueueMessage);
         }
 
-        public override async Task RegisterMessageHandler(Func<IQueueMessage, CancellationToken, Task> handler)
+        public override async Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions)
         {
             lock (_messagePumpSyncLock)
             {
@@ -180,8 +182,9 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 _messagePumpCancellationTokenSource = new CancellationTokenSource();
 
                 _messagePump = new MessagePump(
-                    handler,
                     this,
+                    messageHandler,
+                    messageHandlerOptions,
                     _messagePumpCancellationTokenSource.Token);
             }
 

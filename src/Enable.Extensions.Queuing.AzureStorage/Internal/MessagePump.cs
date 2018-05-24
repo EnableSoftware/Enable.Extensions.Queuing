@@ -11,21 +11,26 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         private readonly Func<IQueueMessage, CancellationToken, Task> _onMessageCallback;
 
+        private readonly MessageHandlerOptions _messageHandlerOptions;
+
         private readonly CancellationToken _cancellationToken;
 
         private readonly SemaphoreSlim _semaphore;
 
         public MessagePump(
-            Func<IQueueMessage, CancellationToken, Task> callback,
             AzureStorageQueueClient queueClient,
+            Func<IQueueMessage, CancellationToken, Task> callback,
+            MessageHandlerOptions messageHandlerOptions,
             CancellationToken cancellationToken)
         {
-            _onMessageCallback = callback ?? throw new ArgumentNullException(nameof(callback));
             _queueClient = queueClient ?? throw new ArgumentNullException(nameof(queueClient));
+            _messageHandlerOptions = messageHandlerOptions ?? throw new ArgumentNullException(nameof(messageHandlerOptions));
+            _onMessageCallback = callback ?? throw new ArgumentNullException(nameof(callback));
             _cancellationToken = cancellationToken;
 
-            // TODO The number of concurrent calls should be configurable.
-            _semaphore = new SemaphoreSlim(1, 1);
+            _semaphore = new SemaphoreSlim(
+                messageHandlerOptions.MaxConcurrentCalls,
+                messageHandlerOptions.MaxConcurrentCalls);
         }
 
         public Task StartPumpAsync()
@@ -56,9 +61,25 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                                 await _onMessageCallback(message, _cancellationToken).ConfigureAwait(false);
                                 await _queueClient.CompleteAsync(message, _cancellationToken).ConfigureAwait(false);
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                try
+                                {
+                                    var exceptionHandler = _messageHandlerOptions?.ExceptionReceivedHandler;
+
+                                    if (exceptionHandler != null)
+                                    {
+                                        var context = new MessageHandlerExceptionContext(ex);
+
+                                        await exceptionHandler(context).ConfigureAwait(false);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
                                 await _queueClient.AbandonAsync(message, _cancellationToken).ConfigureAwait(false);
+
                                 throw;
                             }
                         })

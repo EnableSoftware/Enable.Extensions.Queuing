@@ -141,7 +141,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         }
 
         public override Task RegisterMessageHandler(
-            Func<IQueueMessage, CancellationToken, Task> handler)
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions)
         {
             var consumer = new EventingBasicConsumer(_channel);
 
@@ -156,13 +157,36 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
                 try
                 {
-                    handler(message, cancellationToken).GetAwaiter().GetResult();
-                    CompleteAsync(message, cancellationToken).GetAwaiter().GetResult();
+                    messageHandler(message, cancellationToken)
+                        .GetAwaiter()
+                        .GetResult();
+
+                    CompleteAsync(message, cancellationToken)
+                        .GetAwaiter()
+                        .GetResult();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    AbandonAsync(message, cancellationToken).GetAwaiter().GetResult();
-                    throw;
+                    try
+                    {
+                        var exceptionHandler = messageHandlerOptions?.ExceptionReceivedHandler;
+
+                        if (exceptionHandler != null)
+                        {
+                            var context = new MessageHandlerExceptionContext(ex);
+
+                            exceptionHandler(context)
+                                .GetAwaiter()
+                                .GetResult();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    AbandonAsync(message, cancellationToken)
+                        .GetAwaiter()
+                        .GetResult();
                 }
             };
 
