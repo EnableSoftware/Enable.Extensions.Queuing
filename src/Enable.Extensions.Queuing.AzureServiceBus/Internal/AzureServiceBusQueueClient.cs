@@ -78,7 +78,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
             var options = new Microsoft.Azure.ServiceBus.MessageHandlerOptions(exceptionReceivedHandler)
             {
-                AutoComplete = true,
+                AutoComplete = messageHandlerOptions.AutoComplete,
                 MaxConcurrentCalls = messageHandlerOptions.MaxConcurrentCalls,
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };

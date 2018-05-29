@@ -7,6 +7,8 @@ namespace Enable.Extensions.Queuing.Abstractions
     {
         private int _maxConcurrentCalls = 1;
 
+        public bool AutoComplete { get; set; } = true;
+
         public int MaxConcurrentCalls
         {
             get

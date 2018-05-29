@@ -68,7 +68,11 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                             try
                             {
                                 await _onMessageCallback(message, _cancellationToken).ConfigureAwait(false);
-                                await _queueClient.CompleteAsync(message, _cancellationToken).ConfigureAwait(false);
+
+                                if (_messageHandlerOptions.AutoComplete)
+                                {
+                                    await _queueClient.CompleteAsync(message, _cancellationToken).ConfigureAwait(false);
+                                }
                             }
                             catch (Exception ex)
                             {
