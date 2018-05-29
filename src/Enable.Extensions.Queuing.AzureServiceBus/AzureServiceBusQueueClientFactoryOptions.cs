@@ -1,4 +1,4 @@
-﻿namespace Enable.Extensions.Queuing.AzureServiceBus
+namespace Enable.Extensions.Queuing.AzureServiceBus
 {
     public class AzureServiceBusQueueClientFactoryOptions
     {

@@ -12,24 +12,19 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
         private int _referenceCount = 0;
 
-        public bool TryDequeue(out IQueueMessage message)
-        {
-            return _queue.TryDequeue(out message);
-        }
+        private Func<IQueueMessage, CancellationToken, Task> _messageHandler;
 
-        public void Enqueue(IQueueMessage message)
-        {
-            _queue.Enqueue(message);
-        }
+        private MessageHandlerOptions _messageHandlerOptions;
 
         public void Clear()
         {
             _queue.Clear();
         }
 
-        public int IncrementReferenceCount()
+        public void ClearRegisteredMessageHandler()
         {
-            return Interlocked.Increment(ref _referenceCount);
+            _messageHandler = null;
+            _messageHandlerOptions = null;
         }
 
         public int DecrementReferenceCount()
@@ -37,5 +32,72 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             return Interlocked.Decrement(ref _referenceCount);
         }
 
+        public Task<IQueueMessage> DequeueAsync()
+        {
+            if (_queue.TryDequeue(out IQueueMessage message))
+            {
+                return Task.FromResult(message);
+            }
+
+            return Task.FromResult<IQueueMessage>(null);
+        }
+
+        public async Task EnqueueAsync(IQueueMessage message)
+        {
+            // If a message handler has been registered, we attempt to
+            // invoke the handler. If this successfully processes a
+            // message then no further work is required.
+            var messageHandled = await TryInvokeMessageHandlerAsync(message);
+
+            if (!messageHandled)
+            {
+                // If there is no message handler registered, or if this
+                // throws an exception, then we simply queue the message.
+                _queue.Enqueue(message);
+            }
+        }
+
+        public int IncrementReferenceCount()
+        {
+            return Interlocked.Increment(ref _referenceCount);
+        }
+
+        public void RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions)
+        {
+            if (_messageHandler != null)
+            {
+                throw new InvalidOperationException("A message handler has already been registered.");
+            }
+
+            _messageHandler = messageHandler;
+            _messageHandlerOptions = messageHandlerOptions;
+        }
+
+        private async Task<bool> TryInvokeMessageHandlerAsync(IQueueMessage message)
+        {
+            try
+            {
+                if (_messageHandler != null)
+                {
+                    await _messageHandler(message, CancellationToken.None);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                var exceptionReceivedHandler = _messageHandlerOptions?.ExceptionReceivedHandler;
+
+                if (exceptionReceivedHandler != null)
+                {
+                    var context = new MessageHandlerExceptionContext(ex);
+
+                    await exceptionReceivedHandler(context);
+                }
+            }
+
+            return false;
+        }
     }
 }

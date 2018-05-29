@@ -74,12 +74,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             ThrowIfDisposed();
 
-            if (_queue.TryDequeue(out IQueueMessage message))
-            {
-                return Task.FromResult(message);
-            }
-
-            return Task.FromResult<IQueueMessage>(null);
+            return _queue.DequeueAsync();
         }
 
         public override Task EnqueueAsync(
@@ -88,7 +83,16 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             ThrowIfDisposed();
 
-            _queue.Enqueue(message);
+            return _queue.EnqueueAsync(message);
+        }
+
+        public override Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions)
+        {
+            ThrowIfDisposed();
+
+            _queue.RegisterMessageHandler(messageHandler, messageHandlerOptions);
 
             return Task.CompletedTask;
         }

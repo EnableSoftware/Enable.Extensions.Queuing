@@ -107,6 +107,90 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         }
 
         [Fact]
+        public async Task RegisterMessageHandler_CanInvoke()
+        {
+            // Act
+            await _sut.RegisterMessageHandler(
+                (message, cancellationToken) => throw new Exception("There should be no messages to process."));
+        }
+
+        [Fact]
+        public async Task RegisterMessageHandler_MessageHandlerInvoked()
+        {
+            // Arrange
+            var evt = new ManualResetEvent(false);
+
+            Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
+            {
+                evt.Set();
+                return Task.CompletedTask;
+            }
+
+            await _sut.RegisterMessageHandler(MessageHandler);
+
+            // Act
+            await _sut.EnqueueAsync(
+                Guid.NewGuid().ToString(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.True(evt.WaitOne(1000));
+        }
+
+        [Fact]
+        public async Task RegisterMessageHandler_CanSetMessageHandlerOptions()
+        {
+            // Arrange
+            Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
+            {
+                throw new Exception("There should be no messages to process.");
+            }
+
+            var options = new MessageHandlerOptions
+            {
+                MaxConcurrentCalls = 1,
+                ExceptionReceivedHandler = (_) => Task.CompletedTask
+            };
+
+            // Act
+            await _sut.RegisterMessageHandler(MessageHandler, options);
+        }
+
+        [Fact]
+        public async Task RegisterMessageHandler_ExceptionHandlerInvoked()
+        {
+            // Arrange
+            var evt = new ManualResetEvent(false);
+
+            Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
+            {
+                throw new Exception("Message failed processing.");
+            }
+
+            Task ExceptionHandler(MessageHandlerExceptionContext context)
+            {
+                evt.Set();
+                return Task.CompletedTask;
+            }
+
+            var options = new MessageHandlerOptions
+            {
+                MaxConcurrentCalls = 1,
+                ExceptionReceivedHandler = ExceptionHandler
+            };
+
+            await _sut.RegisterMessageHandler(MessageHandler, options);
+
+            // Act
+            await _sut.EnqueueAsync(
+                Guid.NewGuid().ToString(),
+                CancellationToken.None);
+
+            // Assert
+            Assert.True(evt.WaitOne(1000));
+        }
+
+        [Fact]
         public async Task RenewLockAsync_CanInvoke()
         {
             // Arrange

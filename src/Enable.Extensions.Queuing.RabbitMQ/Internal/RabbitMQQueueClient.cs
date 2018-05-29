@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
@@ -112,7 +113,10 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 return Task.FromResult<IQueueMessage>(null);
             }
 
-            var message = new RabbitMQQueueMessage(result);
+            var message = new RabbitMQQueueMessage(
+                result.Body,
+                result.DeliveryTag,
+                result.BasicProperties);
 
             return Task.FromResult<IQueueMessage>(message);
         }
@@ -131,6 +135,67 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                     _queueName,
                     messageProperties,
                     body);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public override Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions)
+        {
+            var consumer = new EventingBasicConsumer(_channel);
+
+            consumer.Received += (channel, eventArgs) =>
+            {
+                var cancellationToken = CancellationToken.None;
+
+                var message = new RabbitMQQueueMessage(
+                    eventArgs.Body,
+                    eventArgs.DeliveryTag,
+                    eventArgs.BasicProperties);
+
+                try
+                {
+                    messageHandler(message, cancellationToken)
+                        .GetAwaiter()
+                        .GetResult();
+                    
+                    if (messageHandlerOptions.AutoComplete)
+                    {
+                        CompleteAsync(message, cancellationToken)
+                            .GetAwaiter()
+                            .GetResult();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        var exceptionHandler = messageHandlerOptions?.ExceptionReceivedHandler;
+
+                        if (exceptionHandler != null)
+                        {
+                            var context = new MessageHandlerExceptionContext(ex);
+
+                            exceptionHandler(context)
+                                .GetAwaiter()
+                                .GetResult();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    AbandonAsync(message, cancellationToken)
+                        .GetAwaiter()
+                        .GetResult();
+                }
+            };
+
+            lock (_channel)
+            {
+                _channel.BasicConsume(_queueName, autoAck: false, consumer: consumer);
             }
 
             return Task.CompletedTask;
