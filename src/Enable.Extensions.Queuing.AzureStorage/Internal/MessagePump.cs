@@ -17,6 +17,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         private readonly SemaphoreSlim _semaphore;
 
+        private readonly ExponentialBackoffRetryStrategy _retryStrategy;
+
         public MessagePump(
             AzureStorageQueueClient queueClient,
             Func<IQueueMessage, CancellationToken, Task> callback,
@@ -31,6 +33,10 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             _semaphore = new SemaphoreSlim(
                 messageHandlerOptions.MaxConcurrentCalls,
                 messageHandlerOptions.MaxConcurrentCalls);
+
+            _retryStrategy = new ExponentialBackoffRetryStrategy(
+                delay: TimeSpan.FromSeconds(10),
+                maximumDelay: TimeSpan.FromSeconds(30));
         }
 
         public Task StartPumpAsync()
@@ -45,15 +51,18 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             {
                 IQueueMessage message = null;
 
+                var pollingRetryCount = 0;
+
                 try
                 {
                     await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
 
                     message = await _queueClient.MessageReceiver(_cancellationToken).ConfigureAwait(false);
 
-                    // TODO We need to back off when there are no messages in the queue.
                     if (message != null)
                     {
+                        pollingRetryCount = 0;
+
                         Task.Run(async () =>
                         {
                             try
@@ -85,6 +94,13 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                         })
                         .Ignore();
                     }
+                    else
+                    {
+                        // Back off from polling when there are no messages in the queue.
+                        var interval = _retryStrategy.GetRetryInterval(++pollingRetryCount);
+
+                        await Task.Delay(interval);
+                    }
                 }
                 finally
                 {
@@ -93,6 +109,33 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                         _semaphore.Release();
                     }
                 }
+            }
+        }
+
+        private struct ExponentialBackoffRetryStrategy
+        {
+            private readonly int _delayMilliseconds;
+            private readonly int _maximumDelayMilliseconds;
+
+            public ExponentialBackoffRetryStrategy(
+                TimeSpan delay,
+                TimeSpan maximumDelay)
+            {
+                _delayMilliseconds = (int)delay.TotalMilliseconds;
+                _maximumDelayMilliseconds = (int)maximumDelay.TotalMilliseconds;
+            }
+
+            public TimeSpan GetRetryInterval(int retryCount)
+            {
+                retryCount = Math.Min(30, retryCount);
+
+                var delay = Math.Min(
+                    _delayMilliseconds * (Math.Pow(2, retryCount - 1) - 1) / 2,
+                    _maximumDelayMilliseconds);
+
+                var interval = TimeSpan.FromMilliseconds(delay);
+
+                return interval;
             }
         }
     }
