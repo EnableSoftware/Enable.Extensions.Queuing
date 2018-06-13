@@ -176,7 +176,13 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 _messageReceiver = async (token) =>
                 {
                     var message = await GetMessageAsync(token);
-                    return new AzureStorageQueueMessage(message);
+
+                    if (message != null)
+                    {
+                        return new AzureStorageQueueMessage(message);
+                    }
+
+                    return null;
                 };
 
                 _messagePumpCancellationTokenSource = new CancellationTokenSource();
