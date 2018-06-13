@@ -37,6 +37,10 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
+
+            // Clean up
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -62,6 +66,9 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
 
             // Assert
             Assert.NotNull(message);
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -77,6 +84,9 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
 
             // Assert
             Assert.Equal(content, message.GetBody<string>());
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -188,7 +198,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(1)));
+            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
         }
 
         [Fact]
@@ -203,6 +213,9 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
 
             // Act
             await _sut.RenewLockAsync(message, CancellationToken.None);
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         public void Dispose()

@@ -40,6 +40,10 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
+
+            // Clean up
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -65,6 +69,9 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
 
             // Assert
             Assert.NotNull(message);
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -80,6 +87,9 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
 
             // Assert
             Assert.Equal(content, message.GetBody<string>());
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -209,6 +219,9 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
 
             // Assert
             Assert.IsType<NotImplementedException>(exception);
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
         }
 
         public void Dispose()
