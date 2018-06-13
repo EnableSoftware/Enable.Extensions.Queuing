@@ -10,7 +10,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
     {
         private readonly ConcurrentQueue<IQueueMessage> _queue = new ConcurrentQueue<IQueueMessage>();
 
-        private int _referenceCount = 0;
+        private int _referenceCount = 1;
 
         private Func<IQueueMessage, CancellationToken, Task> _messageHandler;
 

@@ -12,19 +12,20 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
         {
             var queueFactory = new InMemoryQueueClientFactory();
 
-            var queueClient = queueFactory.GetQueueReference(QueueName);
-
-            try
+            using (var queueClient = queueFactory.GetQueueReference(QueueName))
             {
-                IQueueMessage message;
-
-                while ((message = await queueClient.DequeueAsync()) != null)
+                try
                 {
-                    await queueClient.CompleteAsync(message);
+                    IQueueMessage message;
+
+                    while ((message = await queueClient.DequeueAsync()) != null)
+                    {
+                        await queueClient.CompleteAsync(message);
+                    }
                 }
-            }
-            catch (OperationCanceledException)
-            {
+                catch (OperationCanceledException)
+                {
+                }
             }
         }
     }
