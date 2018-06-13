@@ -160,7 +160,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                     messageHandler(message, cancellationToken)
                         .GetAwaiter()
                         .GetResult();
-                    
+
                     if (messageHandlerOptions.AutoComplete)
                     {
                         CompleteAsync(message, cancellationToken)

@@ -65,14 +65,14 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
         {
             try
             {
-                var connectionString = Environment.GetEnvironmentVariable(name);
+                var value = Environment.GetEnvironmentVariable(name);
 
-                if (connectionString == null)
+                if (value == null)
                 {
                     throw new Exception($"The environment variable '{name}' could not be found.");
                 }
 
-                return connectionString;
+                return value;
             }
             catch (SecurityException ex)
             {
