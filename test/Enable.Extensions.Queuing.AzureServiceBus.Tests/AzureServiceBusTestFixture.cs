@@ -38,6 +38,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
                     operationTimeout: TimeSpan.FromSeconds(10));
             }
             while (messages?.Count > 0);
+
+            await messageReceiver.CloseAsync();
+
+            messageReceiver = null;
         }
 
         private static string GetEnvironmentVariable(string name)
