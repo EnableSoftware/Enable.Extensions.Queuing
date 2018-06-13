@@ -254,30 +254,6 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
             }
         }
 
-        [Fact]
-        public async Task CanDequeueAcrossInstances_WithDisposedInstance()
-        {
-            // Arrange
-            var queueName = Guid.NewGuid().ToString();
-
-            var queueFactory = new InMemoryQueueClientFactory();
-
-            var content = Guid.NewGuid().ToString();
-
-            using (var instance1 = queueFactory.GetQueueReference(queueName))
-            {
-                await instance1.EnqueueAsync(content, CancellationToken.None);
-            }
-
-            var instance2 = queueFactory.GetQueueReference(queueName);
-
-            // Act
-            var message = await instance2.DequeueAsync(CancellationToken.None);
-
-            // Assert
-            Assert.Equal(content, message.GetBody<string>());
-        }
-
         public void Dispose()
         {
             Dispose(true);
