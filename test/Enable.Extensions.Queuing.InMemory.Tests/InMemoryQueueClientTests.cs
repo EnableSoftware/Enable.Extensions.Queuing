@@ -129,7 +129,7 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(1000));
+            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(1)));
         }
 
         [Fact]
@@ -182,7 +182,7 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(1000));
+            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(1)));
         }
 
         [Fact]
