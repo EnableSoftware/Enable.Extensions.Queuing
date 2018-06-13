@@ -207,7 +207,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             }
         }
 
-        public override Task RenewLockAsync(
+        public override async Task RenewLockAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -215,13 +215,15 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 message.MessageId,
                 message.LeaseId);
 
-            return GetQueue().UpdateMessageAsync(
+            await GetQueue().UpdateMessageAsync(
                 cloudQueueMessage,
                 _visibilityTimeout,
                 MessageUpdateFields.Visibility,
                 null,
                 null,
                 cancellationToken);
+
+            ((AzureStorageQueueMessage)message).UpdateLeaseId(cloudQueueMessage.PopReceipt);
         }
 
         protected override void Dispose(bool disposing)
