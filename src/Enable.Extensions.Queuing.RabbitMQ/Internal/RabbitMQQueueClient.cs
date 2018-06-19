@@ -56,10 +56,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 autoDelete: false,
                 arguments: queueArguments);
 
-            // Here we are assuming a "worker queue", where multiple consumers are
-            // competing to draw from a single queue in order to spread workload
-            // across the consumers.
-            _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+            ConfigureBasicQos(prefetchCount: 1);
         }
 
         public override Task AbandonAsync(
@@ -144,53 +141,20 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
         {
+            // Reconfigure QoS in order to support specified level of concurrency.
+            ConfigureBasicQos(prefetchCount: messageHandlerOptions.MaxConcurrentCalls);
+
             var consumer = new EventingBasicConsumer(_channel);
 
-            consumer.Received += (channel, eventArgs) =>
+            // The use of an `async void` event handler allows the calling consumer
+            // instance to continue and return before the message handler completes,
+            // which is essential for handling multiple messages concurrently with a
+            // single consumer, albeit at the expense of message processing order.
+            // Any exceptions propagating from the message handler will effectively
+            // be ignored.
+            consumer.Received += async (channel, eventArgs) =>
             {
-                var cancellationToken = CancellationToken.None;
-
-                var message = new RabbitMQQueueMessage(
-                    eventArgs.Body,
-                    eventArgs.DeliveryTag,
-                    eventArgs.BasicProperties);
-
-                try
-                {
-                    messageHandler(message, cancellationToken)
-                        .GetAwaiter()
-                        .GetResult();
-
-                    if (messageHandlerOptions.AutoComplete)
-                    {
-                        CompleteAsync(message, cancellationToken)
-                            .GetAwaiter()
-                            .GetResult();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        var exceptionHandler = messageHandlerOptions?.ExceptionReceivedHandler;
-
-                        if (exceptionHandler != null)
-                        {
-                            var context = new MessageHandlerExceptionContext(ex);
-
-                            exceptionHandler(context)
-                                .GetAwaiter()
-                                .GetResult();
-                        }
-                    }
-                    catch
-                    {
-                    }
-
-                    AbandonAsync(message, cancellationToken)
-                        .GetAwaiter()
-                        .GetResult();
-                }
+                await OnReceived(messageHandler, messageHandlerOptions, eventArgs);
             };
 
             lock (_channel)
@@ -239,6 +203,62 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private string GetDeadLetterQueueName(string queueName)
         {
             return $"{queueName}.dead-letter";
+        }
+
+        private void ConfigureBasicQos(int prefetchCount)
+        {
+            lock (_channel)
+            {
+                // Here we are assuming a "worker queue", where multiple consumers are
+                // competing to draw from a single queue in order to spread workload
+                // across the consumers.
+                _channel.BasicQos(
+                    prefetchSize: 0,
+                    prefetchCount: Convert.ToUInt16(prefetchCount),
+                    global: false);
+            }
+        }
+
+        private async Task OnReceived(
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions,
+            BasicDeliverEventArgs eventArgs)
+        {
+            var cancellationToken = CancellationToken.None;
+
+            var message = new RabbitMQQueueMessage(
+                eventArgs.Body,
+                eventArgs.DeliveryTag,
+                eventArgs.BasicProperties);
+
+            try
+            {
+                await messageHandler(message, cancellationToken);
+
+                if (messageHandlerOptions.AutoComplete)
+                {
+                    await CompleteAsync(message, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    var exceptionHandler = messageHandlerOptions?.ExceptionReceivedHandler;
+
+                    if (exceptionHandler != null)
+                    {
+                        var context = new MessageHandlerExceptionContext(ex);
+
+                        await exceptionHandler(context);
+                    }
+                }
+                catch
+                {
+                }
+
+                await AbandonAsync(message, cancellationToken);
+            }
         }
     }
 }
