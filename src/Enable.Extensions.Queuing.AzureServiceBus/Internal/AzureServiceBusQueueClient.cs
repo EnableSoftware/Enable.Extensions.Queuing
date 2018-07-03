@@ -74,6 +74,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
         {
+            if (messageHandlerOptions == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandlerOptions));
+            }
+
             var exceptionReceivedHandler = GetExceptionReceivedHandler(messageHandlerOptions);
 
             var options = new Microsoft.Azure.ServiceBus.MessageHandlerOptions(exceptionReceivedHandler)

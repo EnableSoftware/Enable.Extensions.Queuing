@@ -152,6 +152,23 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
         }
 
         [Fact]
+        public async Task RegisterMessageHandler_ThrowsForNullMessageHandlerOptions()
+        {
+            // Arrange
+            Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
+            {
+                throw new Exception("There should be no messages to process.");
+            }
+
+            // Act
+            var exception = await Record.ExceptionAsync(
+                () => _sut.RegisterMessageHandler(MessageHandler, null));
+
+            // Assert
+            Assert.IsType<ArgumentNullException>(exception);
+        }
+
+        [Fact]
         public async Task RegisterMessageHandler_CanSetMessageHandlerOptions()
         {
             // Arrange

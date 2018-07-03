@@ -144,6 +144,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
         {
+            if (messageHandlerOptions == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandlerOptions));
+            }
+
             var consumer = new EventingBasicConsumer(_channel);
 
             consumer.Received += (channel, eventArgs) =>
