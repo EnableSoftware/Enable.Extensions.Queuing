@@ -20,6 +20,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private readonly string _queueName;
         private readonly string _deadLetterQueueName;
 
+        private bool _messageHandlerRegistered;
         private bool _disposed;
 
         public RabbitMQQueueClient(ConnectionFactory connectionFactory, string queueName)
@@ -149,58 +150,65 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 throw new ArgumentNullException(nameof(messageHandlerOptions));
             }
 
-            var consumer = new EventingBasicConsumer(_channel);
-
-            consumer.Received += (channel, eventArgs) =>
+            lock (_channel)
             {
-                var cancellationToken = CancellationToken.None;
-
-                var message = new RabbitMQQueueMessage(
-                    eventArgs.Body,
-                    eventArgs.DeliveryTag,
-                    eventArgs.BasicProperties);
-
-                try
+                if (_messageHandlerRegistered)
                 {
-                    messageHandler(message, cancellationToken)
-                        .GetAwaiter()
-                        .GetResult();
-
-                    if (messageHandlerOptions.AutoComplete)
-                    {
-                        CompleteAsync(message, cancellationToken)
-                            .GetAwaiter()
-                            .GetResult();
-                    }
+                    throw new InvalidOperationException("A message handler has already been registered.");
                 }
-                catch (Exception ex)
+
+                var consumer = new EventingBasicConsumer(_channel);
+
+                consumer.Received += (channel, eventArgs) =>
                 {
+                    var cancellationToken = CancellationToken.None;
+
+                    var message = new RabbitMQQueueMessage(
+                        eventArgs.Body,
+                        eventArgs.DeliveryTag,
+                        eventArgs.BasicProperties);
+
                     try
                     {
-                        var exceptionHandler = messageHandlerOptions?.ExceptionReceivedHandler;
+                        messageHandler(message, cancellationToken)
+                            .GetAwaiter()
+                            .GetResult();
 
-                        if (exceptionHandler != null)
+                        if (messageHandlerOptions.AutoComplete)
                         {
-                            var context = new MessageHandlerExceptionContext(ex);
-
-                            exceptionHandler(context)
+                            CompleteAsync(message, cancellationToken)
                                 .GetAwaiter()
                                 .GetResult();
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        try
+                        {
+                            var exceptionHandler = messageHandlerOptions?.ExceptionReceivedHandler;
+
+                            if (exceptionHandler != null)
+                            {
+                                var context = new MessageHandlerExceptionContext(ex);
+
+                                exceptionHandler(context)
+                                    .GetAwaiter()
+                                    .GetResult();
+                            }
+                        }
+                        catch
+                        {
+                        }
+
+                        AbandonAsync(message, cancellationToken)
+                            .GetAwaiter()
+                            .GetResult();
                     }
+                };
 
-                    AbandonAsync(message, cancellationToken)
-                        .GetAwaiter()
-                        .GetResult();
-                }
-            };
-
-            lock (_channel)
-            {
                 _channel.BasicConsume(_queueName, autoAck: false, consumer: consumer);
+
+                _messageHandlerRegistered = true;
             }
 
             return Task.CompletedTask;

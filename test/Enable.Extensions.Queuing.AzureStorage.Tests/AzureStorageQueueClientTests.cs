@@ -149,6 +149,24 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
         }
 
         [Fact]
+        public async Task RegisterMessageHandler_ThrowsOnMutipleMessageHandlerRegistrations()
+        {
+            // Arrange
+            Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
+            {
+                throw new Exception("There should be no messages to process.");
+            }
+
+            await _sut.RegisterMessageHandler(MessageHandler);
+
+            // Act
+            var exception = await Record.ExceptionAsync(() => _sut.RegisterMessageHandler(MessageHandler));
+
+            // Assert
+            Assert.IsType<InvalidOperationException>(exception);
+        }
+
+        [Fact]
         public async Task RegisterMessageHandler_ThrowsForNullMessageHandlerOptions()
         {
             // Arrange
