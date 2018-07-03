@@ -56,6 +56,9 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 autoDelete: false,
                 arguments: queueArguments);
 
+            // Here we are assuming a "worker queue", where multiple consumers are
+            // competing to draw from a single queue in order to spread workload
+            // across the consumers.
             ConfigureBasicQos(prefetchCount: 1);
         }
 
@@ -141,20 +144,23 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
         {
-            // Reconfigure QoS in order to support specified level of concurrency.
+            // Reconfigure quality of service on the channel in order to
+            // support specified level of concurrency. Here we are changing
+            // the prefetch count to a user-specified `MaxConcurrentCalls`.
+            // This only affects new consumers on the channel, existing
+            // consumers are unaffected and will have a `prefetchCount` of 1,
+            // as specified in the constructor, above.
             ConfigureBasicQos(prefetchCount: messageHandlerOptions.MaxConcurrentCalls);
 
             var consumer = new EventingBasicConsumer(_channel);
 
-            // The use of an `async void` event handler allows the calling consumer
-            // instance to continue and return before the message handler completes,
-            // which is essential for handling multiple messages concurrently with a
-            // single consumer, albeit at the expense of message processing order.
-            // Any exceptions propagating from the message handler will effectively
-            // be ignored.
-            consumer.Received += async (channel, eventArgs) =>
+            consumer.Received += (channel, eventArgs) =>
             {
-                await OnReceived(messageHandler, messageHandlerOptions, eventArgs);
+                // Queue the processing of the message received. This allows
+                // the calling consumer instance to continue before the message
+                // handler completes, which is essential for handling multiple
+                // messages concurrently with a single consumer.
+                Task.Run(() => OnMessageReceivedAsync(messageHandler, messageHandlerOptions, eventArgs)).Ignore();
             };
 
             lock (_channel)
@@ -219,7 +225,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             }
         }
 
-        private async Task OnReceived(
+        private async Task OnMessageReceivedAsync(
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions,
             BasicDeliverEventArgs eventArgs)
