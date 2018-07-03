@@ -144,6 +144,14 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
         {
+            if (messageHandlerOptions.MaxConcurrentCalls > ushort.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(messageHandlerOptions.MaxConcurrentCalls),
+                    messageHandlerOptions.MaxConcurrentCalls,
+                    $@"'{nameof(messageHandlerOptions.MaxConcurrentCalls)}' must be less than or equal to {ushort.MaxValue}.");
+            }
+
             // Reconfigure quality of service on the channel in order to
             // support specified level of concurrency. Here we are changing
             // the prefetch count to a user-specified `MaxConcurrentCalls`.
