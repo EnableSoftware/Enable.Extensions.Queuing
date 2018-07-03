@@ -20,6 +20,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private readonly string _queueName;
         private readonly string _deadLetterQueueName;
 
+        private bool _messageHandlerRegistered;
         private bool _disposed;
 
         public RabbitMQQueueClient(ConnectionFactory connectionFactory, string queueName)
@@ -144,6 +145,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
         {
+            if (messageHandlerOptions == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandlerOptions));
+            }
+
             if (messageHandlerOptions.MaxConcurrentCalls > ushort.MaxValue)
             {
                 throw new ArgumentOutOfRangeException(
@@ -152,28 +158,35 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                     $@"'{nameof(messageHandlerOptions.MaxConcurrentCalls)}' must be less than or equal to {ushort.MaxValue}.");
             }
 
-            // Reconfigure quality of service on the channel in order to
-            // support specified level of concurrency. Here we are changing
-            // the prefetch count to a user-specified `MaxConcurrentCalls`.
-            // This only affects new consumers on the channel, existing
-            // consumers are unaffected and will have a `prefetchCount` of 1,
-            // as specified in the constructor, above.
-            ConfigureBasicQos(prefetchCount: messageHandlerOptions.MaxConcurrentCalls);
-
-            var consumer = new EventingBasicConsumer(_channel);
-
-            consumer.Received += (channel, eventArgs) =>
-            {
-                // Queue the processing of the message received. This allows
-                // the calling consumer instance to continue before the message
-                // handler completes, which is essential for handling multiple
-                // messages concurrently with a single consumer.
-                Task.Run(() => OnMessageReceivedAsync(messageHandler, messageHandlerOptions, eventArgs)).Ignore();
-            };
-
             lock (_channel)
             {
+                if (_messageHandlerRegistered)
+                {
+                    throw new InvalidOperationException("A message handler has already been registered.");
+                }
+
+                // Reconfigure quality of service on the channel in order to
+                // support specified level of concurrency. Here we are changing
+                // the prefetch count to a user-specified `MaxConcurrentCalls`.
+                // This only affects new consumers on the channel, existing
+                // consumers are unaffected and will have a `prefetchCount` of 1,
+                // as specified in the constructor, above.
+                ConfigureBasicQos(prefetchCount: messageHandlerOptions.MaxConcurrentCalls);
+
+                var consumer = new EventingBasicConsumer(_channel);
+
+                consumer.Received += (channel, eventArgs) =>
+                {
+                    // Queue the processing of the message received. This allows
+                    // the calling consumer instance to continue before the message
+                    // handler completes, which is essential for handling multiple
+                    // messages concurrently with a single consumer.
+                    Task.Run(() => OnMessageReceivedAsync(messageHandler, messageHandlerOptions, eventArgs)).Ignore();
+                };
+
                 _channel.BasicConsume(_queueName, autoAck: false, consumer: consumer);
+
+                _messageHandlerRegistered = true;
             }
 
             return Task.CompletedTask;

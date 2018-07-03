@@ -92,6 +92,11 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             ThrowIfDisposed();
 
+            if (messageHandlerOptions == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandlerOptions));
+            }
+
             _queue.RegisterMessageHandler(messageHandler, messageHandlerOptions);
 
             return Task.CompletedTask;

@@ -166,6 +166,11 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
         {
+            if (messageHandlerOptions == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandlerOptions));
+            }
+
             lock (_messagePumpSyncLock)
             {
                 if (_messagePump != null)
