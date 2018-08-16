@@ -33,7 +33,7 @@ namespace Enable.Extensions.Queuing.Abstractions
             byte[] content,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var message = new QueueMessage(content);
+            IQueueMessage message = new QueueMessage(content);
 
             return EnqueueAsync(message, cancellationToken);
         }

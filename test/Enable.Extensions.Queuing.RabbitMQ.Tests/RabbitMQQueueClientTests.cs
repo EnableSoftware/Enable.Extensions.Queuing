@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
@@ -33,10 +34,41 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
         }
 
         [Fact]
-        public async Task EnqueueAsync_CanInvoke()
+        public async Task EnqueueAsync_CanInvokeWithString()
         {
             // Arrange
             var content = Guid.NewGuid().ToString();
+
+            // Act
+            await _sut.EnqueueAsync(content, CancellationToken.None);
+
+            // Clean up
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_CanInvokeWithByteArray()
+        {
+            // Arrange
+            var content = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
+
+            // Act
+            await _sut.EnqueueAsync(content, CancellationToken.None);
+
+            // Clean up
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_CanInvokeWithCustomMessageType()
+        {
+            // Arrange
+            var content = new CustomMessageType
+            {
+                Message = Guid.NewGuid().ToString()
+            };
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
@@ -288,6 +320,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
 
                 _disposed = true;
             }
+        }
+
+        private class CustomMessageType
+        {
+            public string Message { get; set; }
         }
     }
 }
