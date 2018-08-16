@@ -21,6 +21,8 @@ namespace Enable.Extensions.Queuing.Abstractions
                 if (value <= 0)
                 {
                     throw new ArgumentOutOfRangeException(
+                        nameof(value),
+                        value,
                         $"The specified value '{value}' is invalid. '{nameof(MaxConcurrentCalls)}' must be greater than zero.");
                 }
 
