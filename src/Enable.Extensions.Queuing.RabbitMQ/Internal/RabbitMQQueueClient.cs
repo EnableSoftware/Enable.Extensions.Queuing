@@ -23,7 +23,10 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private bool _messageHandlerRegistered;
         private bool _disposed;
 
-        public RabbitMQQueueClient(ConnectionFactory connectionFactory, string queueName)
+        public RabbitMQQueueClient(
+            ConnectionFactory connectionFactory,
+            string queueName,
+            QueueMode queueMode = QueueMode.Default)
         {
             _connectionFactory = connectionFactory;
             _connection = _connectionFactory.CreateConnection();
@@ -49,6 +52,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 { "x-dead-letter-exchange", string.Empty },
                 { "x-dead-letter-routing-key", _deadLetterQueueName }
             };
+
+            if (queueMode == QueueMode.Lazy)
+            {
+                queueArguments.Add("x-queue-mode", "lazy");
+            }
 
             _channel.QueueDeclare(
                 queueName,
