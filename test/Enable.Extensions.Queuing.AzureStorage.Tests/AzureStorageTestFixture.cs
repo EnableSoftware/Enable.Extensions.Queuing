@@ -6,8 +6,10 @@ using Microsoft.WindowsAzure.Storage.Auth;
 
 namespace Enable.Extensions.Queuing.AzureStorage.Tests
 {
-    public class AzureStorageTestFixture
+    public class AzureStorageTestFixture : IDisposable
     {
+        private bool _disposed;
+
         public AzureStorageTestFixture()
         {
             AccountName = GetEnvironmentVariable("AZURE_STORAGE_ACCOUNT_NAME");
@@ -19,35 +21,75 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
 
         public string AccountKey { get; private set; }
 
-        public Task DeleteQueue(string queueName)
+        public string QueueName { get; } = Guid.NewGuid().ToString();
+
+        public Task ClearQueue()
         {
             var credentials = new StorageCredentials(AccountName, AccountKey);
             var storageAccount = new CloudStorageAccount(credentials, useHttps: true);
 
             var client = storageAccount.CreateCloudQueueClient();
 
-            var queue = client.GetQueueReference(queueName);
+            var queue = client.GetQueueReference(QueueName);
 
-            return queue.DeleteIfExistsAsync();
+            return queue.ClearAsync();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    try
+                    {
+                        // Make a best effort to remove our temporary test queue.
+                        DeleteQueue();
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                _disposed = true;
+            }
         }
 
         private static string GetEnvironmentVariable(string name)
         {
             try
             {
-                var connectionString = Environment.GetEnvironmentVariable(name);
+                var value = Environment.GetEnvironmentVariable(name);
 
-                if (connectionString == null)
+                if (value == null)
                 {
                     throw new Exception($"The environment variable '{name}' could not be found.");
                 }
 
-                return connectionString;
+                return value;
             }
             catch (SecurityException ex)
             {
                 throw new Exception($"The environment variable '{name}' is not accessible.", ex);
             }
+        }
+
+         private Task DeleteQueue()
+        {
+            var credentials = new StorageCredentials(AccountName, AccountKey);
+            var storageAccount = new CloudStorageAccount(credentials, useHttps: true);
+
+            var client = storageAccount.CreateCloudQueueClient();
+
+            var queue = client.GetQueueReference(QueueName);
+
+            return queue.DeleteIfExistsAsync();
         }
     }
 }

@@ -104,10 +104,19 @@ namespace Enable.Extensions.Queuing.Abstractions
         /// Register a message handler. This handler is awaited each time that
         /// a new message is received.
         /// </summary>
-        /// <param name="handler">The handler that processes each message.</param>
-        /// <remarks>A new thread is started to receive messages.</remarks>
+        /// <param name="messageHandler">The handler that processes each message.</param>
         Task RegisterMessageHandler(
-            Func<IQueueMessage, CancellationToken, Task> handler);
+            Func<IQueueMessage, CancellationToken, Task> messageHandler);
+
+        /// <summary>
+        /// Register a message handler. This handler is awaited each time that
+        /// a new message is received.
+        /// </summary>
+        /// <param name="messageHandler">The handler that processes each message.</param>
+        /// <param name="messageHandlerOptions">The settings used to configure how messages are received.</param>
+        Task RegisterMessageHandler(
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions);
 
         Task RenewLockAsync(
             IQueueMessage message,

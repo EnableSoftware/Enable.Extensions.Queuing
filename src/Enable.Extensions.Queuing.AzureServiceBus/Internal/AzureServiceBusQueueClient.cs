@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.ServiceBus.Core;
+using MessageHandlerOptions = Enable.Extensions.Queuing.Abstractions.MessageHandlerOptions;
 
 namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 {
+    // TODO Respect cancellationToken
     public class AzureServiceBusQueueClient : BaseQueueClient
     {
         private readonly string _connectionString;
-        private readonly string _entityName;
-        private readonly int _maxConcurrentCalls;
-        private readonly Func<ExceptionReceivedEventArgs, Task> _exceptionReceivedHandler;
+        private readonly string _queueName;
         private readonly MessageReceiver _messageReceiver;
         private readonly MessageSender _messageSender;
 
@@ -20,21 +20,17 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
         public AzureServiceBusQueueClient(
             string connectionString,
-            string entityName,
-            AzureServiceBusQueueClientOptions options)
+            string queueName)
         {
             _connectionString = connectionString;
-            _entityName = entityName;
-            _maxConcurrentCalls = options?.MaxConcurrentCalls ?? 0;
-            _exceptionReceivedHandler = options?.ExceptionReceivedHandler ?? ((args) => Task.CompletedTask);
+            _queueName = queueName;
 
             _messageReceiver = new MessageReceiver(
                     connectionString,
-                    entityName,
-                    ReceiveMode.PeekLock,
-                    prefetchCount: options?.PrefetchCount ?? 0);
+                    queueName,
+                    ReceiveMode.PeekLock);
 
-            _messageSender = new MessageSender(connectionString, entityName);
+            _messageSender = new MessageSender(connectionString, queueName);
         }
 
         public override Task AbandonAsync(
@@ -54,9 +50,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         public override async Task<IQueueMessage> DequeueAsync(
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            // This timeout is arbitrary. It is needed in order to return null if no message,
-            // and must be long enough to allow time for connection setup.
-            var message = await _messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(3));
+            // This timeout is arbitrary. It is needed in order to return null
+            // if no messages are queued, and must be long enough to allow time
+            // for connection setup.
+            var message = await _messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(10));
 
             if (message == null)
             {
@@ -74,17 +71,25 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         }
 
         public override Task RegisterMessageHandler(
-            Func<IQueueMessage, CancellationToken, Task> handler)
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions)
         {
-            var options = new MessageHandlerOptions(_exceptionReceivedHandler)
+            if (messageHandlerOptions == null)
             {
-                AutoComplete = true,
-                MaxConcurrentCalls = _maxConcurrentCalls,
+                throw new ArgumentNullException(nameof(messageHandlerOptions));
+            }
+
+            var exceptionReceivedHandler = GetExceptionReceivedHandler(messageHandlerOptions);
+
+            var options = new Microsoft.Azure.ServiceBus.MessageHandlerOptions(exceptionReceivedHandler)
+            {
+                AutoComplete = messageHandlerOptions.AutoComplete,
+                MaxConcurrentCalls = messageHandlerOptions.MaxConcurrentCalls,
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };
 
             _messageReceiver.RegisterMessageHandler(
-                (message, token) => handler(new AzureServiceBusQueueMessage(message), token),
+                (message, token) => messageHandler(new AzureServiceBusQueueMessage(message), token),
                 options);
 
             return Task.CompletedTask;
@@ -116,6 +121,24 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             }
 
             base.Dispose(disposing);
+        }
+
+        private static Func<ExceptionReceivedEventArgs, Task> GetExceptionReceivedHandler(
+            MessageHandlerOptions options)
+        {
+            if (options?.ExceptionReceivedHandler == null)
+            {
+                return _ => Task.CompletedTask;
+            }
+
+            Task ExceptionReceivedHandler(ExceptionReceivedEventArgs args)
+            {
+                var context = new MessageHandlerExceptionContext(args.Exception);
+
+                return options.ExceptionReceivedHandler(new MessageHandlerExceptionContext(args.Exception));
+            }
+
+            return ExceptionReceivedHandler;
         }
     }
 }

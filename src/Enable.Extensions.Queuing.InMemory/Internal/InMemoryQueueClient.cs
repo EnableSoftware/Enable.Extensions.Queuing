@@ -28,6 +28,8 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
         private readonly InMemoryQueue _queue;
 
+        private readonly string _queueName;
+
         private bool _disposed;
 
         public InMemoryQueueClient(string queueName)
@@ -39,12 +41,14 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             // queues for the same `queueName` are disposed.
             _queue = _queues.AddOrUpdate(
                 queueName,
-                new InMemoryQueue(this),
+                new InMemoryQueue(),
                 (key, oldValue) =>
                 {
                     oldValue.IncrementReferenceCount();
                     return oldValue;
                 });
+
+            _queueName = queueName;
         }
 
         public override Task AbandonAsync(
@@ -70,12 +74,7 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             ThrowIfDisposed();
 
-            if (_queue.TryDequeue(out IQueueMessage message))
-            {
-                return Task.FromResult(message);
-            }
-
-            return Task.FromResult<IQueueMessage>(null);
+            return _queue.DequeueAsync();
         }
 
         public override Task EnqueueAsync(
@@ -84,15 +83,21 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
         {
             ThrowIfDisposed();
 
-            _queue.Enqueue(message);
-
-            return Task.CompletedTask;
+            return _queue.EnqueueAsync(message);
         }
 
         public override Task RegisterMessageHandler(
-            Func<IQueueMessage, CancellationToken, Task> handler)
+            Func<IQueueMessage, CancellationToken, Task> messageHandler,
+            MessageHandlerOptions messageHandlerOptions)
         {
-            _queue.RegisterMessageHandler(handler);
+            ThrowIfDisposed();
+
+            if (messageHandlerOptions == null)
+            {
+                throw new ArgumentNullException(nameof(messageHandlerOptions));
+            }
+
+            _queue.RegisterMessageHandler(messageHandler, messageHandlerOptions);
 
             return Task.CompletedTask;
         }
@@ -116,7 +121,10 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
 
                     if (referenceCount == 0)
                     {
+                        // Clear and remove the queue if there are no longer
+                        // any references to it.
                         _queue.Clear();
+                        _queues.TryRemove(_queueName, out _);
                     }
                 }
 

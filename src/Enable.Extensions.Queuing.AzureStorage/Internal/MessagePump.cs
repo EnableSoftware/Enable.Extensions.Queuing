@@ -11,21 +11,32 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         private readonly Func<IQueueMessage, CancellationToken, Task> _onMessageCallback;
 
+        private readonly MessageHandlerOptions _messageHandlerOptions;
+
         private readonly CancellationToken _cancellationToken;
 
         private readonly SemaphoreSlim _semaphore;
 
+        private readonly ExponentialBackoffRetryStrategy _retryStrategy;
+
         public MessagePump(
-            Func<IQueueMessage, CancellationToken, Task> callback,
             AzureStorageQueueClient queueClient,
+            Func<IQueueMessage, CancellationToken, Task> callback,
+            MessageHandlerOptions messageHandlerOptions,
             CancellationToken cancellationToken)
         {
-            _onMessageCallback = callback ?? throw new ArgumentNullException(nameof(callback));
             _queueClient = queueClient ?? throw new ArgumentNullException(nameof(queueClient));
+            _messageHandlerOptions = messageHandlerOptions ?? throw new ArgumentNullException(nameof(messageHandlerOptions));
+            _onMessageCallback = callback ?? throw new ArgumentNullException(nameof(callback));
             _cancellationToken = cancellationToken;
 
-            // TODO The number of concurrent calls should be configurable.
-            _semaphore = new SemaphoreSlim(1, 1);
+            _semaphore = new SemaphoreSlim(
+                messageHandlerOptions.MaxConcurrentCalls,
+                messageHandlerOptions.MaxConcurrentCalls);
+
+            _retryStrategy = new ExponentialBackoffRetryStrategy(
+                delay: TimeSpan.FromSeconds(10),
+                maximumDelay: TimeSpan.FromSeconds(30));
         }
 
         public Task StartPumpAsync()
@@ -40,29 +51,59 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             {
                 IQueueMessage message = null;
 
+                var pollingRetryCount = 0;
+
                 try
                 {
                     await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
 
                     message = await _queueClient.MessageReceiver(_cancellationToken).ConfigureAwait(false);
 
-                    // TODO We need to back off when there are no messages in the queue.
                     if (message != null)
                     {
+                        pollingRetryCount = 0;
+
                         Task.Run(async () =>
                         {
                             try
                             {
                                 await _onMessageCallback(message, _cancellationToken).ConfigureAwait(false);
-                                await _queueClient.CompleteAsync(message, _cancellationToken).ConfigureAwait(false);
+
+                                if (_messageHandlerOptions.AutoComplete)
+                                {
+                                    await _queueClient.CompleteAsync(message, _cancellationToken).ConfigureAwait(false);
+                                }
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                try
+                                {
+                                    var exceptionHandler = _messageHandlerOptions?.ExceptionReceivedHandler;
+
+                                    if (exceptionHandler != null)
+                                    {
+                                        var context = new MessageHandlerExceptionContext(ex);
+
+                                        await exceptionHandler(context).ConfigureAwait(false);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
                                 await _queueClient.AbandonAsync(message, _cancellationToken).ConfigureAwait(false);
+
                                 throw;
                             }
                         })
                         .Ignore();
+                    }
+                    else
+                    {
+                        // Back off from polling when there are no messages in the queue.
+                        var interval = _retryStrategy.GetRetryInterval(++pollingRetryCount);
+
+                        await Task.Delay(interval);
                     }
                 }
                 finally
@@ -72,6 +113,33 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                         _semaphore.Release();
                     }
                 }
+            }
+        }
+
+        private struct ExponentialBackoffRetryStrategy
+        {
+            private readonly int _delayMilliseconds;
+            private readonly int _maximumDelayMilliseconds;
+
+            public ExponentialBackoffRetryStrategy(
+                TimeSpan delay,
+                TimeSpan maximumDelay)
+            {
+                _delayMilliseconds = (int)delay.TotalMilliseconds;
+                _maximumDelayMilliseconds = (int)maximumDelay.TotalMilliseconds;
+            }
+
+            public TimeSpan GetRetryInterval(int retryCount)
+            {
+                retryCount = Math.Min(30, retryCount);
+
+                var delay = Math.Min(
+                    _delayMilliseconds * (Math.Pow(2, retryCount - 1) - 1) / 2,
+                    _maximumDelayMilliseconds);
+
+                var interval = TimeSpan.FromMilliseconds(delay);
+
+                return interval;
             }
         }
     }

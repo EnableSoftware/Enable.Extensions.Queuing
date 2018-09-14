@@ -8,9 +8,15 @@ namespace Enable.Extensions.Queuing.RabbitMQ
     public class RabbitMQQueueClientFactory : IQueueClientFactory
     {
         private readonly ConnectionFactory _connectionFactory;
+        private readonly QueueMode _queueMode;
 
         public RabbitMQQueueClientFactory(RabbitMQQueueClientFactoryOptions options)
         {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
             _connectionFactory = new ConnectionFactory
             {
                 HostName = options.HostName,
@@ -21,6 +27,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
+
+            _queueMode = options.LazyQueues ? QueueMode.Lazy : QueueMode.Default;
         }
 
         public IQueueClient GetQueueReference(string queueName)
@@ -30,7 +38,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
                 throw new ArgumentException(nameof(queueName));
             }
 
-            return new RabbitMQQueueClient(_connectionFactory, queueName);
+            return new RabbitMQQueueClient(_connectionFactory, queueName, _queueMode);
         }
     }
 }
