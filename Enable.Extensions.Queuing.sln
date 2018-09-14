@@ -37,11 +37,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.RabbitMQ.Tests", "test\Enable.Extensions.Queuing.RabbitMQ.Tests\Enable.Extensions.Queuing.RabbitMQ.Tests.csproj", "{9649C1D8-5A40-4CFD-A851-94863FE24DD5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.TestUtils", "test\Enable.Extensions.Queuing.TestUtils\Enable.Extensions.Queuing.TestUtils.csproj", "{9BD5A3B6-A12E-454E-A187-B06685DA88D7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.Discovery", "src\Enable.Extensions.Queuing.Discovery\Enable.Extensions.Queuing.Discovery.csproj", "{237D5FBF-577E-489A-889F-D9CC81818518}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enable.Extensions.Queuing.Discovery.Tests", "test\Enable.Extensions.Queuing.Discovery.Tests\Enable.Extensions.Queuing.Discovery.Tests.csproj", "{9864C152-B0D3-46F7-ADE4-7238FA656275}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Enable.Extensions.Queuing.Discovery.Tests", "test\Enable.Extensions.Queuing.Discovery.Tests\Enable.Extensions.Queuing.Discovery.Tests.csproj", "{9864C152-B0D3-46F7-ADE4-7238FA656275}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,10 +83,6 @@ Global
 		{9649C1D8-5A40-4CFD-A851-94863FE24DD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9649C1D8-5A40-4CFD-A851-94863FE24DD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9649C1D8-5A40-4CFD-A851-94863FE24DD5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9BD5A3B6-A12E-454E-A187-B06685DA88D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9BD5A3B6-A12E-454E-A187-B06685DA88D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9BD5A3B6-A12E-454E-A187-B06685DA88D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9BD5A3B6-A12E-454E-A187-B06685DA88D7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{237D5FBF-577E-489A-889F-D9CC81818518}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{237D5FBF-577E-489A-889F-D9CC81818518}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{237D5FBF-577E-489A-889F-D9CC81818518}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -111,7 +105,6 @@ Global
 		{888F3DBF-D5BE-406E-A341-527BF4C58013} = {10ED950A-E129-4E18-85B7-C18907703918}
 		{956F2A2D-81F7-4490-8A5C-3563A978B407} = {10ED950A-E129-4E18-85B7-C18907703918}
 		{9649C1D8-5A40-4CFD-A851-94863FE24DD5} = {10ED950A-E129-4E18-85B7-C18907703918}
-		{9BD5A3B6-A12E-454E-A187-B06685DA88D7} = {10ED950A-E129-4E18-85B7-C18907703918}
 		{237D5FBF-577E-489A-889F-D9CC81818518} = {5E460909-2E66-4038-A5D0-0F7DDEE06FEC}
 		{9864C152-B0D3-46F7-ADE4-7238FA656275} = {10ED950A-E129-4E18-85B7-C18907703918}
 	EndGlobalSection

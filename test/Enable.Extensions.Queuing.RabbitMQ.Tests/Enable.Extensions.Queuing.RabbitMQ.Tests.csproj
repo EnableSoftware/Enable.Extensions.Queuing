@@ -7,15 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
     <PackageReference Include="StyleCop.Analyzers" PrivateAssets="All" Version="1.0.2" />
-    <PackageReference Include="xunit" Version="2.2.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Enable.Extensions.Queuing.RabbitMQ\Enable.Extensions.Queuing.RabbitMQ.csproj" />
-    <ProjectReference Include="..\Enable.Extensions.Queuing.TestUtils\Enable.Extensions.Queuing.TestUtils.csproj" />
   </ItemGroup>
 
   <ItemGroup>
