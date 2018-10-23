@@ -26,7 +26,16 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             string queueName)
         {
             var credentials = new StorageCredentials(accountName, accountKey);
-            var storageAccount = new CloudStorageAccount(credentials, useHttps: true);
+
+            // Get storage account object differently if it is the local development account
+            if (credentials.AccountName == "devstoreaccount1")
+            {
+                storageAccount = CloudStorageAccount.Parse("UseDevelopmentStorage=true;");
+            }
+            else
+            {
+                storageAccount = new CloudStorageAccount(credentials, useHttps: true);
+            }
 
             var client = storageAccount.CreateCloudQueueClient();
 
