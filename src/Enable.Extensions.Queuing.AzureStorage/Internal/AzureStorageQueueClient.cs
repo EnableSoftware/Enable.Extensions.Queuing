@@ -26,6 +26,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             string queueName)
         {
             var credentials = new StorageCredentials(accountName, accountKey);
+            CloudStorageAccount storageAccount;
 
             // Get storage account object differently if it is the local development account
             if (credentials.AccountName == "devstoreaccount1")
