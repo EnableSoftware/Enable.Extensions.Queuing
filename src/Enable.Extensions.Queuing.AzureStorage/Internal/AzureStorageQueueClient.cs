@@ -25,10 +25,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
             string accountKey,
             string queueName)
         {
-            var credentials = new StorageCredentials(accountName, accountKey);
-            var storageAccount = new CloudStorageAccount(credentials, useHttps: true);
-
-            var client = storageAccount.CreateCloudQueueClient();
+            var client = GetCloudQueueClient(accountName, accountKey, queueName);
 
             _queueFactory = new AsyncLazy<CloudQueue>(async () =>
             {
@@ -278,6 +275,36 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 null,
                 null,
                 cancellationToken);
+        }
+
+        private CloudQueueClient GetCloudQueueClient(
+            string accountName,
+            string accountKey,
+            string queueName)
+        {
+            CloudStorageAccount storageAccount;
+
+            if (IsDevelopmentStorageAccount(accountName))
+            {
+                storageAccount = CloudStorageAccount.DevelopmentStorageAccount;
+            }
+            else
+            {
+                var credentials = new StorageCredentials(accountName, accountKey);
+                storageAccount = new CloudStorageAccount(credentials, useHttps: true);
+            }
+
+            return storageAccount.CreateCloudQueueClient();
+        }
+
+        private bool IsDevelopmentStorageAccount(string accountName)
+        {
+            var developmentStorageAccountName = CloudStorageAccount.DevelopmentStorageAccount.Credentials.AccountName;
+
+            return string.Equals(
+                accountName,
+                developmentStorageAccountName,
+                StringComparison.OrdinalIgnoreCase);
         }
     }
 }
