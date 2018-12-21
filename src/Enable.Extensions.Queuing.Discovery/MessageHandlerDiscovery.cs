@@ -65,7 +65,9 @@ namespace Enable.Extensions.Queuing.Discovery
                 await handleMessage(service, payload).ConfigureAwait(false);
             }
 
-            await queueClient.RegisterMessageHandler(handler).ConfigureAwait(false);
+            var messageHandlerOptions = (MessageHandlerOptions)services.GetService(typeof(MessageHandlerOptions));
+
+            await queueClient.RegisterMessageHandler(handler, messageHandlerOptions ?? new MessageHandlerOptions()).ConfigureAwait(false);
         }
 
         public static async Task DiscoverMessageHandlers(
