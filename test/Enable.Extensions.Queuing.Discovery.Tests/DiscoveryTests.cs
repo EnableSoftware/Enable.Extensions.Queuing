@@ -44,7 +44,7 @@ namespace Enable.Extensions.Queuing.Discovery.Tests
                 Times.Once);
 
             queueClient.Verify(
-                o => o.RegisterMessageHandler(It.IsAny<Func<IQueueMessage, CancellationToken, Task>>()),
+                o => o.RegisterMessageHandler(It.IsAny<Func<IQueueMessage, CancellationToken, Task>>(), It.IsAny<MessageHandlerOptions>()),
                 Times.Once);
         }
 
