@@ -176,7 +176,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(1)));
+            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
         }
 
         [Fact]
@@ -264,7 +264,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(1)));
+            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
         }
 
         [Fact]

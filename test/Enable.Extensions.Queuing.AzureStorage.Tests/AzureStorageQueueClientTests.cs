@@ -177,7 +177,7 @@ namespace Enable.Extensions.Queuing.AzureStorage.Tests
                 CancellationToken.None);
 
             // Assert
-            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(1)));
+            Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
         }
 
         [Fact]
