@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
@@ -13,12 +14,12 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
     /// <para>
     /// This queue implementation is useful when you want to test components
     /// using something that approximates connecting to a real queue, without
-    /// the overhead of actual queue operations. 
+    /// the overhead of actual queue operations.
     /// </para>
     /// <para>
     /// This queue implementation is intended to be used in test code only.
     /// This queue is only valid for the lifetime of the host process and
-    /// cannot be used for inter-process communication. 
+    /// cannot be used for inter-process communication.
     /// </para>
     /// </remarks>
     internal class InMemoryQueueClient : BaseQueueClient
@@ -84,6 +85,15 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
             ThrowIfDisposed();
 
             return _queue.EnqueueAsync(message);
+        }
+
+        public override Task EnqueueAsync(
+            IEnumerable<IQueueMessage> messages,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            ThrowIfDisposed();
+
+            return _queue.EnqueueAsync(messages);
         }
 
         public override Task RegisterMessageHandler(

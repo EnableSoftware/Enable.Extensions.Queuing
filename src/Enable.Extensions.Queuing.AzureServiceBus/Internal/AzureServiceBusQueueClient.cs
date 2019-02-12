@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
@@ -67,7 +68,21 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _messageSender.SendAsync(new Message(message.Body) { ContentType = "application/json" });
+            return _messageSender.SendAsync(CreateMessage(message));
+        }
+
+        public override Task EnqueueAsync(
+            IEnumerable<IQueueMessage> messages,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var messageList = new List<Message>();
+
+            foreach (var message in messages)
+            {
+                messageList.Add(CreateMessage(message));
+            }
+
+            return _messageSender.SendAsync(messageList);
         }
 
         public override Task RegisterMessageHandler(
@@ -139,6 +154,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             }
 
             return ExceptionReceivedHandler;
+        }
+
+        private Message CreateMessage(IQueueMessage message)
+        {
+            return new Message(message.Body)
+            {
+                ContentType = "application/json"
+            };
         }
     }
 }

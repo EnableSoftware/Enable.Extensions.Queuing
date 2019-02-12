@@ -149,6 +149,36 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             return Task.CompletedTask;
         }
 
+        public override Task EnqueueAsync(
+            IEnumerable<IQueueMessage> messages,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // Setting the mandatory option to false will silently drop a message
+            // if it fails. This is the default value for the BasicPublish method,
+            // which is used elsewhere when publishing single messages.
+            var mandatory = false;
+            var messageProperties = GetBasicMessageProperties(_channel);
+
+            lock (_channel)
+            {
+                var batch = _channel.CreateBasicPublishBatch();
+
+                foreach (var message in messages)
+                {
+                    batch.Add(
+                        _exchangeName,
+                        _queueName,
+                        mandatory,
+                        messageProperties,
+                        message.Body);
+                }
+
+                batch.Publish();
+            }
+
+            return Task.CompletedTask;
+        }
+
         public override Task RegisterMessageHandler(
             Func<IQueueMessage, CancellationToken, Task> messageHandler,
             MessageHandlerOptions messageHandlerOptions)
