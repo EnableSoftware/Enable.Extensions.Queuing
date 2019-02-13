@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,6 +59,20 @@ namespace Enable.Extensions.Queuing.Abstractions
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
+        /// Asynchronously enqueue a batch of messages on to the queue.
+        /// </summary>
+        /// <param name="messages">The collection of messages to enqueue.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync(
+            IEnumerable<IQueueMessage> messages,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
         /// Asynchronously enqueue a message on to the queue.
         /// </summary>
         /// <param name="content">The payload of the message to enqueue.</param>
@@ -98,6 +113,21 @@ namespace Enable.Extensions.Queuing.Abstractions
         /// </returns>
         Task EnqueueAsync<T>(
             T content,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Asynchronously enqueue a batch of messages on to the queue.
+        /// </summary>
+        /// <typeparam name="T">The type of the payload to enqueue.</typeparam>
+        /// <param name="messages">The collection of payload items to enqueue.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync<T>(
+            IEnumerable<T> messages,
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>

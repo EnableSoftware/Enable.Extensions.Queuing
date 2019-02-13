@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
@@ -157,6 +158,23 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
                 cancellationToken);
 
             message = new AzureStorageQueueMessage(cloudQueueMessage);
+        }
+
+        public override Task EnqueueAsync(
+            IEnumerable<IQueueMessage> messages,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // Azure Storage does not currently support sending batches of
+            // messages. Instead we loop through the collection of messages
+            // and utilise existing logic for sending each single message.
+            var tasks = new List<Task>();
+
+            foreach (var message in messages)
+            {
+                tasks.Add(EnqueueAsync(message, cancellationToken));
+            }
+
+            return Task.WhenAll(tasks);
         }
 
         public override async Task RegisterMessageHandler(

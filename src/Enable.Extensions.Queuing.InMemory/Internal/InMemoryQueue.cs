@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
@@ -55,6 +56,18 @@ namespace Enable.Extensions.Queuing.InMemory.Internal
                 // throws an exception, then we simply queue the message.
                 _queue.Enqueue(message);
             }
+        }
+
+        public Task EnqueueAsync(IEnumerable<IQueueMessage> messages)
+        {
+            var tasks = new List<Task>();
+
+            foreach (var message in messages)
+            {
+                tasks.Add(EnqueueAsync(message));
+            }
+
+            return Task.WhenAll(tasks);
         }
 
         public int IncrementReferenceCount()

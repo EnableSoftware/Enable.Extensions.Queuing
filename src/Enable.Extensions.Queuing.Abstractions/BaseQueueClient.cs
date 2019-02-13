@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,10 @@ namespace Enable.Extensions.Queuing.Abstractions
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken));
 
+        public abstract Task EnqueueAsync(
+            IEnumerable<IQueueMessage> messages,
+            CancellationToken cancellationToken = default(CancellationToken));
+
         public Task EnqueueAsync(
             byte[] content,
             CancellationToken cancellationToken = default(CancellationToken))
@@ -49,13 +54,23 @@ namespace Enable.Extensions.Queuing.Abstractions
             T content,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var json = JsonConvert.SerializeObject(content);
-
-            var payload = Encoding.UTF8.GetBytes(json);
-
-            IQueueMessage message = new QueueMessage(payload);
+            var message = SerializeQueueMessage(content);
 
             return EnqueueAsync(message, cancellationToken);
+        }
+
+        public Task EnqueueAsync<T>(
+            IEnumerable<T> messages,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var batch = new List<IQueueMessage>();
+
+            foreach (var message in messages)
+            {
+                batch.Add(SerializeQueueMessage(message));
+            }
+
+            return EnqueueAsync(messages: batch, cancellationToken: cancellationToken);
         }
 
         public Task RegisterMessageHandler(
@@ -76,6 +91,15 @@ namespace Enable.Extensions.Queuing.Abstractions
 
         protected virtual void Dispose(bool disposing)
         {
+        }
+
+        private IQueueMessage SerializeQueueMessage<T>(T content)
+        {
+            var json = JsonConvert.SerializeObject(content);
+
+            var payload = Encoding.UTF8.GetBytes(json);
+
+            return new QueueMessage(payload);
         }
     }
 }

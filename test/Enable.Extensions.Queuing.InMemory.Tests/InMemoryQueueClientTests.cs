@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,6 +68,26 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
             // Clean up
             var message = await _sut.DequeueAsync(CancellationToken.None);
             await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_CanInvokeWithMultipleMessages()
+        {
+            // Arrange
+            var messages = new List<string>
+            {
+                Guid.NewGuid().ToString(),
+                Guid.NewGuid().ToString()
+            };
+
+            // Act
+            await _sut.EnqueueAsync<string>(messages, CancellationToken.None);
+
+            // Clean up
+            var message1 = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message1, CancellationToken.None);
+            var message2 = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message2, CancellationToken.None);
         }
 
         [Fact]
@@ -277,12 +298,12 @@ namespace Enable.Extensions.Queuing.InMemory.Tests
 
                 var messageHandled = false;
 
-               Func<IQueueMessage, CancellationToken, Task> handler
-                    = (message, cancellationToken) =>
-                    {
-                        messageHandled = true;
-                        return Task.CompletedTask;
-                    };
+                Func<IQueueMessage, CancellationToken, Task> handler
+                     = (message, cancellationToken) =>
+                     {
+                         messageHandled = true;
+                         return Task.CompletedTask;
+                     };
 
                 await instance2.RegisterMessageHandler(handler);
 
