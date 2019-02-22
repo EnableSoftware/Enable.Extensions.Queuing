@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Enable.Extensions.Queuing.Abstractions;
 using Enable.Extensions.Queuing.RabbitMQ.Internal;
 using RabbitMQ.Client;
@@ -7,7 +7,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
 {
     public class RabbitMQQueueClientFactory : IQueueClientFactory
     {
-        private readonly ConnectionFactory _connectionFactory;
+        private readonly IConnectionFactory _connectionFactory;
         private readonly QueueMode _queueMode;
 
         public RabbitMQQueueClientFactory(RabbitMQQueueClientFactoryOptions options)

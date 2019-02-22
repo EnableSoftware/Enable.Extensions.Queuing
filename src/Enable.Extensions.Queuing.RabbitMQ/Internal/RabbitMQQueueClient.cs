@@ -13,7 +13,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
     {
         private const string RedeliveryCountHeaderName = "x-redelivered-count";
 
-        private readonly ConnectionFactory _connectionFactory;
+        private readonly IConnectionFactory _connectionFactory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _exchangeName;
@@ -24,12 +24,12 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private bool _disposed;
 
         public RabbitMQQueueClient(
-            ConnectionFactory connectionFactory,
+            IConnectionFactory connectionFactory,
             string queueName,
             QueueMode queueMode = QueueMode.Default)
         {
             _connectionFactory = connectionFactory;
-            _connection = _connectionFactory.CreateConnection();
+            _connection = new RabbitMQConnectionProvider(_connectionFactory).GetConnection();
             _channel = _connection.CreateModel();
 
             // Declare the dead letter queue.
@@ -245,7 +245,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 if (disposing)
                 {
                     _channel.Dispose();
-                    _connection.Dispose();
                 }
 
                 _disposed = true;
