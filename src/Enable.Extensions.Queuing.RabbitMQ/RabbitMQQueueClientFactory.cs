@@ -7,7 +7,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
 {
     public class RabbitMQQueueClientFactory : IQueueClientFactory
     {
-        private readonly RabbitMQConnectionFactory _connectionFactory;
+        private readonly RabbitMQConnectionManager _connectionManager;
         private readonly QueueMode _queueMode;
 
         public RabbitMQQueueClientFactory(RabbitMQQueueClientFactoryOptions options)
@@ -17,7 +17,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _connectionFactory = new RabbitMQConnectionFactory(options);
+            _connectionManager = new RabbitMQConnectionManager(options);
 
             _queueMode = options.LazyQueues ? QueueMode.Lazy : QueueMode.Default;
         }
@@ -29,7 +29,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
                 throw new ArgumentException(nameof(queueName));
             }
 
-            return new RabbitMQQueueClient(_connectionFactory, queueName, _queueMode);
+            return new RabbitMQQueueClient(_connectionManager, queueName, _queueMode);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
     {
         private const string RedeliveryCountHeaderName = "x-redelivered-count";
 
-        private readonly RabbitMQConnectionFactory _connectionFactory;
+        private readonly RabbitMQConnectionManager _connectionFactory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _exchangeName;
@@ -25,12 +25,12 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private bool _disposed;
 
         public RabbitMQQueueClient(
-            RabbitMQConnectionFactory connectionFactory,
+            RabbitMQConnectionManager connectionManager,
             string queueName,
             QueueMode queueMode = QueueMode.Default)
         {
-            _connectionFactory = connectionFactory;
-            _connection = connectionFactory.GetOrCreateConnection();
+            _connectionFactory = connectionManager;
+            _connection = connectionManager.GetOrCreateConnection();
 
             try
             {
@@ -38,7 +38,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             }
             catch (ChannelAllocationException)
             {
-                _connection = connectionFactory.CreateConnection();
+                _connection = connectionManager.CreateConnection();
                 _channel = _connection.CreateModel();
             }
 
@@ -254,7 +254,9 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             {
                 if (disposing)
                 {
+                    _channel.Close();
                     _channel.Dispose();
+                    _connectionFactory.ReleaseConnection();
                 }
 
                 _disposed = true;

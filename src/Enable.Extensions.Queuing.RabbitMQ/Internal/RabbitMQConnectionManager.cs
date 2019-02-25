@@ -4,10 +4,10 @@ using RabbitMQ.Client;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
-    internal class RabbitMQConnectionFactory : IDisposable
+    internal class RabbitMQConnectionManager
     {
-        private static readonly Dictionary<int, WeakReference<IConnection>>
-            _connections = new Dictionary<int, WeakReference<IConnection>>();
+        private static readonly Dictionary<int, RabbitMQManagedConnection>
+            _connections = new Dictionary<int, RabbitMQManagedConnection>();
 
         private static readonly object _lock = new object();
 
@@ -15,9 +15,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private readonly IConnectionFactory _connectionFactory;
         private readonly RabbitMQQueueClientFactoryOptions _options;
 
-        private bool _disposed;
-
-        public RabbitMQConnectionFactory(RabbitMQQueueClientFactoryOptions options)
+        public RabbitMQConnectionManager(RabbitMQQueueClientFactoryOptions options)
         {
             _options = options;
 
@@ -48,26 +46,18 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         {
             lock (_lock)
             {
-                IConnection connection;
+                _connections.TryGetValue(_connectionHash, out var managedConnection);
 
-                _connections.TryGetValue(_connectionHash, out var weakConnection);
-
-                if (weakConnection != null)
+                if (managedConnection == null || managedConnection.Disposed)
                 {
-                    weakConnection.TryGetTarget(out connection);
-
-                    if (connection == null)
-                    {
-                        connection = _connectionFactory.CreateConnection();
-                        weakConnection.SetTarget(connection);
-                    }
+                    return CreateConnection();
                 }
                 else
                 {
-                    connection = CreateConnection();
-                }
+                    managedConnection.IncrementReferenceCount();
 
-                return connection;
+                    return managedConnection.Connection;
+                }
             }
         }
 
@@ -76,51 +66,42 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             lock (_lock)
             {
                 var connection = _connectionFactory.CreateConnection();
-                var weakConnection = new WeakReference<IConnection>(connection);
+                var managedConnection = new RabbitMQManagedConnection(connection);
 
-                AddOrUpdateConnection(weakConnection);
+                AddOrUpdateConnection(managedConnection);
 
                 return connection;
             }
         }
 
-        public void Dispose()
+        public void ReleaseConnection()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
+            lock (_lock)
             {
-                if (disposing)
+                if (_connections.TryGetValue(_connectionHash, out var managedConnection))
                 {
-                    if (UnusedConnectionExists(_connectionHash))
+                    managedConnection.DecrementReferenceCount();
+
+                    if (managedConnection.ReferenceCount == 0)
                     {
+                        managedConnection.Dispose();
+
                         _connections.Remove(_connectionHash);
                     }
                 }
-
-                _disposed = true;
             }
         }
 
-        private void AddOrUpdateConnection(WeakReference<IConnection> weakConnection)
+        private void AddOrUpdateConnection(RabbitMQManagedConnection managedConnection)
         {
             if (_connections.ContainsKey(_connectionHash))
             {
-                _connections[_connectionHash] = weakConnection;
+                _connections[_connectionHash] = managedConnection;
             }
             else
             {
-                _connections.Add(_connectionHash, weakConnection);
+                _connections.Add(_connectionHash, managedConnection);
             }
-        }
-
-        private bool UnusedConnectionExists(int connectionHash)
-        {
-            return _connections.TryGetValue(connectionHash, out var weakConnection) && !weakConnection.TryGetTarget(out var connection);
         }
     }
 }
