@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,40 +13,41 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
     // TODO Respect cancellationToken
     public class AzureServiceBusQueueClient : BaseQueueClient
     {
-        private readonly string _connectionString;
-        private readonly string _queueName;
-        private readonly MessageReceiver _messageReceiver;
-        private readonly MessageSender _messageSender;
+        private static readonly ConcurrentDictionary<int, AzureServiceBusQueue> _queues
+            = new ConcurrentDictionary<int, AzureServiceBusQueue>();
 
+        private readonly int _queueKey;
+        private readonly AzureServiceBusQueue _queue;
         private bool _disposed;
 
         public AzureServiceBusQueueClient(
             string connectionString,
             string queueName)
         {
-            _connectionString = connectionString;
-            _queueName = queueName;
+            _queueKey = $"{connectionString}:{queueName}".GetHashCode();
 
-            _messageReceiver = new MessageReceiver(
-                    connectionString,
-                    queueName,
-                    ReceiveMode.PeekLock);
-
-            _messageSender = new MessageSender(connectionString, queueName);
+            _queue = _queues.AddOrUpdate(
+                _queueKey,
+                new AzureServiceBusQueue(connectionString, queueName),
+                (_, queue) =>
+                {
+                    queue.AddReference();
+                    return queue;
+                });
         }
 
         public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _messageReceiver.AbandonAsync(message.LeaseId);
+            return _queue.Receiver.AbandonAsync(message.LeaseId);
         }
 
         public override Task CompleteAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _messageReceiver.CompleteAsync(message.LeaseId);
+            return _queue.Receiver.CompleteAsync(message.LeaseId);
         }
 
         public override async Task<IQueueMessage> DequeueAsync(
@@ -54,7 +56,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             // This timeout is arbitrary. It is needed in order to return null
             // if no messages are queued, and must be long enough to allow time
             // for connection setup.
-            var message = await _messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(10));
+            var message = await _queue.Receiver.ReceiveAsync(TimeSpan.FromSeconds(10));
 
             if (message == null)
             {
@@ -68,7 +70,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _messageSender.SendAsync(CreateMessage(message));
+            return _queue.Sender.SendAsync(CreateMessage(message));
         }
 
         public override Task EnqueueAsync(
@@ -82,7 +84,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 messageList.Add(CreateMessage(message));
             }
 
-            return _messageSender.SendAsync(messageList);
+            return _queue.Sender.SendAsync(messageList);
         }
 
         public override Task RegisterMessageHandler(
@@ -103,7 +105,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };
 
-            _messageReceiver.RegisterMessageHandler(
+            _queue.Receiver.RegisterMessageHandler(
                 (message, token) => messageHandler(new AzureServiceBusQueueMessage(message), token),
                 options);
 
@@ -114,7 +116,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _messageReceiver.RenewLockAsync(message.LeaseId);
+            return _queue.Receiver.RenewLockAsync(message.LeaseId);
         }
 
         protected override void Dispose(bool disposing)
@@ -123,19 +125,36 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             {
                 if (disposing)
                 {
-                    _messageReceiver.CloseAsync()
-                        .GetAwaiter()
-                        .GetResult();
+                    // Use Monitor to prevent race conditions
+                    Monitor.Enter(_queues);
+                    try
+                    {
+                        var refCount = _queue.RemoveReference();
+                        if (refCount == 0)
+                        {
+                            var removed = _queues.TryRemove(_queueKey, out _);
+                            if (removed)
+                            {
+                                _queue.Dispose();
+                            }
+                            else
+                            {
+                                // This case should never occur, because we used Monitor to avoid race conditions
+                                // Raise an exception if this occurs to notify us that this code is probably wrong
+                                throw new Exception("Queue could not be removed from dictionary.");
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Monitor.Exit(_queues);
+                    }
 
-                    _messageSender.CloseAsync()
-                        .GetAwaiter()
-                        .GetResult();
+                    base.Dispose(true);
                 }
 
                 _disposed = true;
             }
-
-            base.Dispose(disposing);
         }
 
         private static Func<ExceptionReceivedEventArgs, Task> GetExceptionReceivedHandler(
