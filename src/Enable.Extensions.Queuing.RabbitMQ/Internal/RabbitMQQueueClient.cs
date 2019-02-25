@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
@@ -13,7 +14,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
     {
         private const string RedeliveryCountHeaderName = "x-redelivered-count";
 
-        private readonly IConnectionFactory _connectionFactory;
+        private readonly RabbitMQConnectionFactory _connectionFactory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _exchangeName;
@@ -24,13 +25,22 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         private bool _disposed;
 
         public RabbitMQQueueClient(
-            IConnectionFactory connectionFactory,
+            RabbitMQConnectionFactory connectionFactory,
             string queueName,
             QueueMode queueMode = QueueMode.Default)
         {
             _connectionFactory = connectionFactory;
-            _connection = new RabbitMQConnectionProvider(_connectionFactory).GetConnection();
-            _channel = _connection.CreateModel();
+            _connection = connectionFactory.GetOrCreateConnection();
+
+            try
+            {
+                _channel = _connection.CreateModel();
+            }
+            catch (ChannelAllocationException)
+            {
+                _connection = connectionFactory.CreateConnection();
+                _channel = _connection.CreateModel();
+            }
 
             // Declare the dead letter queue.
             _deadLetterQueueName = GetDeadLetterQueueName(queueName);

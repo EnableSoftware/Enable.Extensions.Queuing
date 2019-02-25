@@ -7,7 +7,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
 {
     public class RabbitMQQueueClientFactory : IQueueClientFactory
     {
-        private readonly IConnectionFactory _connectionFactory;
+        private readonly RabbitMQConnectionFactory _connectionFactory;
         private readonly QueueMode _queueMode;
 
         public RabbitMQQueueClientFactory(RabbitMQQueueClientFactoryOptions options)
@@ -17,16 +17,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _connectionFactory = new ConnectionFactory
-            {
-                HostName = options.HostName,
-                Port = options.Port,
-                VirtualHost = options.VirtualHost,
-                UserName = options.UserName,
-                Password = options.Password,
-                AutomaticRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
-            };
+            _connectionFactory = new RabbitMQConnectionFactory(options);
 
             _queueMode = options.LazyQueues ? QueueMode.Lazy : QueueMode.Default;
         }
