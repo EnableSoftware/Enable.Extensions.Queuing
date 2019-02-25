@@ -11,10 +11,10 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
         private static readonly object _lock = new object();
 
+        private readonly int _connectionHash;
         private readonly IConnectionFactory _connectionFactory;
         private readonly RabbitMQQueueClientFactoryOptions _options;
 
-        private int _connectionHash;
         private bool _disposed;
 
         public RabbitMQConnectionFactory(RabbitMQQueueClientFactoryOptions options)
@@ -75,17 +75,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         {
             lock (_lock)
             {
-                _connectionHash = new
-                {
-                    _options.HostName,
-                    _options.Port,
-                    _options.VirtualHost,
-                    _options.UserName,
-                    _options.Password,
-                    _options.AutomaticRecoveryEnabled,
-                    _options.NetworkRecoveryInterval,
-                }.GetHashCode();
-
                 var connection = _connectionFactory.CreateConnection();
                 var weakConnection = new WeakReference<IConnection>(connection);
 
