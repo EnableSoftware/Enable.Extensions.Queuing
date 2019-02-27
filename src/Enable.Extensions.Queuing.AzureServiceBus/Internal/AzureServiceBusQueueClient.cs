@@ -36,6 +36,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 });
         }
 
+        internal AzureServiceBusQueue Queue
+        {
+            get => _queue;
+        }
+
         public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
