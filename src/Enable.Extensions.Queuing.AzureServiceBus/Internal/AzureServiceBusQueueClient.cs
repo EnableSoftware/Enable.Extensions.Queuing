@@ -24,6 +24,9 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             string connectionString,
             string queueName)
         {
+            connectionString = connectionString.ToLower();
+            queueName = queueName.ToLower();
+
             _queueKey = $"{connectionString}:{queueName}".GetHashCode();
 
             _queue = _queues.AddOrUpdate(
@@ -149,8 +152,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                             }
                             else
                             {
-                                // This case should never occur, because we used lock to avoid race conditions
-                                // Raise an exception if this occurs to notify us that this code is probably wrong
+                                // This case should never occur, because we
+                                // used lock to avoid race conditions.
+                                // Raise an exception if this occurs to notify
+                                // us that this code is probably wrong.
                                 throw new Exception("Queue could not be removed from dictionary.");
                             }
                         }
