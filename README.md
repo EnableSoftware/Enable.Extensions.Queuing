@@ -128,7 +128,7 @@ namespace QueuingSamples
                 // Or if something goes wrong and we can't process the
                 // message, we can "abandon" it (but don't call both
                 // `CompleteAsync` and `AbandonAsync`!).
-                // await queue.CompleteAsync(message);
+                // await queue.AbandonAsync(message);
             }
         }
     }
