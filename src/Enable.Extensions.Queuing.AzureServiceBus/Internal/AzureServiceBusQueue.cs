@@ -13,23 +13,23 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
         public AzureServiceBusQueue(string connectionString, string queueName)
         {
-            Receiver = new MessageReceiver(
+            MessageReceiver = new MessageReceiver(
                 connectionString,
                 queueName,
                 ReceiveMode.PeekLock);
 
-            Sender = new MessageSender(connectionString, queueName);
+            MessageSender = new MessageSender(connectionString, queueName);
         }
 
-        public IMessageSender Sender { get; }
-        public IMessageReceiver Receiver { get; }
+        public IMessageSender MessageSender { get; }
+        public IMessageReceiver MessageReceiver { get; }
 
-        public int AddReference()
+        public int IncrementReferenceCount()
         {
             return Interlocked.Increment(ref _referenceCount);
         }
 
-        public int RemoveReference()
+        public int DecrementReferenceCount()
         {
             return Interlocked.Decrement(ref _referenceCount);
         }
@@ -37,6 +37,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -45,8 +46,13 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             {
                 if (disposing)
                 {
-                    Receiver.CloseAsync().GetAwaiter().GetResult();
-                    Sender.CloseAsync().GetAwaiter().GetResult();
+                    MessageReceiver.CloseAsync()
+                        .GetAwaiter()
+                        .GetResult();
+
+                    MessageSender.CloseAsync()
+                        .GetAwaiter()
+                        .GetResult();
                 }
 
                 _disposed = true;

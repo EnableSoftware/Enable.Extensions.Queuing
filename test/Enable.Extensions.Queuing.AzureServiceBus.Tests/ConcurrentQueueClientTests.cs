@@ -1,37 +1,33 @@
-using System;
-using System.Security;
 using Enable.Extensions.Queuing.AzureServiceBus.Internal;
 using Xunit;
 
 namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 {
-    public class ConcurrentQueueClientTests
+    public class ConcurrentQueueClientTests : IClassFixture<AzureServiceBusTestFixture>
     {
         private readonly AzureServiceBusQueueClientFactory _factory;
         private readonly string _queueName;
 
-        public ConcurrentQueueClientTests()
+        public ConcurrentQueueClientTests(AzureServiceBusTestFixture fixture)
         {
-            var connectionString = GetEnvironmentVariable("AZURE_SERVICE_BUS_CONNECTION_STRING");
-
             var factoryOptions = new AzureServiceBusQueueClientFactoryOptions
             {
-                ConnectionString = connectionString
+                ConnectionString = fixture.ConnectionString
             };
 
             _factory = new AzureServiceBusQueueClientFactory(factoryOptions);
-            _queueName = GetEnvironmentVariable("AZURE_SERVICE_BUS_QUEUE_NAME");
+            _queueName = fixture.QueueName;
         }
 
         [Fact]
-        public void ConcurrentQueueClientsUseSameQueue()
+        public void ConcurrentQueueClientsUseSameMessageReceiver()
         {
             // Arrange
             var client = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
             var anotherClient = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
 
             // Assert
-            Assert.True(object.ReferenceEquals(client.Queue, anotherClient.Queue));
+            Assert.Same(client.MessageReceiver, anotherClient.MessageReceiver);
 
             // Clean up
             client.Dispose();
@@ -39,7 +35,22 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         }
 
         [Fact]
-        public void UnconcurrentQueueClientsUseDifferentQueue()
+        public void ConcurrentQueueClientsUseSameMessageSender()
+        {
+            // Arrange
+            var client = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
+            var anotherClient = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
+
+            // Assert
+            Assert.Same(client.MessageSender, anotherClient.MessageSender);
+
+            // Clean up
+            client.Dispose();
+            anotherClient.Dispose();
+        }
+
+        [Fact]
+        public void UnconcurrentQueueClientsUseDifferentMessageReceiver()
         {
             // Arrange
             var client = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
@@ -48,29 +59,26 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             var anotherClient = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
 
             // Assert
-            Assert.False(object.ReferenceEquals(client.Queue, anotherClient.Queue));
+            Assert.NotSame(client.MessageReceiver, anotherClient.MessageReceiver);
 
             // Clean up
             anotherClient.Dispose();
         }
 
-        private static string GetEnvironmentVariable(string name)
+        [Fact]
+        public void UnconcurrentQueueClientsUseDifferentMessageSender()
         {
-            try
-            {
-                var value = Environment.GetEnvironmentVariable(name);
+            // Arrange
+            var client = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
+            client.Dispose(); // Dispose of this client before we make another.
 
-                if (value == null)
-                {
-                    throw new Exception($"The environment variable '{name}' could not be found.");
-                }
+            var anotherClient = _factory.GetQueueReference(_queueName) as AzureServiceBusQueueClient;
 
-                return value;
-            }
-            catch (SecurityException ex)
-            {
-                throw new Exception($"The environment variable '{name}' is not accessible.", ex);
-            }
+            // Assert
+            Assert.NotSame(client.MessageSender, anotherClient.MessageSender);
+
+            // Clean up
+            anotherClient.Dispose();
         }
     }
 }

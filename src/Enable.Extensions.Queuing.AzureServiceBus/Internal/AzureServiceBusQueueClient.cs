@@ -31,28 +31,33 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 new AzureServiceBusQueue(connectionString, queueName),
                 (_, queue) =>
                 {
-                    queue.AddReference();
+                    queue.IncrementReferenceCount();
                     return queue;
                 });
         }
 
-        internal AzureServiceBusQueue Queue
+        internal IMessageReceiver MessageReceiver
         {
-            get => _queue;
+            get => _queue.MessageReceiver;
+        }
+
+        internal IMessageSender MessageSender
+        {
+            get => _queue.MessageSender;
         }
 
         public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _queue.Receiver.AbandonAsync(message.LeaseId);
+            return MessageReceiver.AbandonAsync(message.LeaseId);
         }
 
         public override Task CompleteAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _queue.Receiver.CompleteAsync(message.LeaseId);
+            return MessageReceiver.CompleteAsync(message.LeaseId);
         }
 
         public override async Task<IQueueMessage> DequeueAsync(
@@ -61,7 +66,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             // This timeout is arbitrary. It is needed in order to return null
             // if no messages are queued, and must be long enough to allow time
             // for connection setup.
-            var message = await _queue.Receiver.ReceiveAsync(TimeSpan.FromSeconds(10));
+            var message = await MessageReceiver.ReceiveAsync(TimeSpan.FromSeconds(10));
 
             if (message == null)
             {
@@ -75,7 +80,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _queue.Sender.SendAsync(CreateMessage(message));
+            return MessageSender.SendAsync(CreateMessage(message));
         }
 
         public override Task EnqueueAsync(
@@ -89,7 +94,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 messageList.Add(CreateMessage(message));
             }
 
-            return _queue.Sender.SendAsync(messageList);
+            return MessageSender.SendAsync(messageList);
         }
 
         public override Task RegisterMessageHandler(
@@ -110,7 +115,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };
 
-            _queue.Receiver.RegisterMessageHandler(
+            MessageReceiver.RegisterMessageHandler(
                 (message, token) => messageHandler(new AzureServiceBusQueueMessage(message), token),
                 options);
 
@@ -121,7 +126,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _queue.Receiver.RenewLockAsync(message.LeaseId);
+            return MessageReceiver.RenewLockAsync(message.LeaseId);
         }
 
         protected override void Dispose(bool disposing)
@@ -130,29 +135,25 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             {
                 if (disposing)
                 {
-                    // Use Monitor to prevent race conditions
-                    Monitor.Enter(_queues);
-                    try
+                    lock (_queues)
                     {
-                        var refCount = _queue.RemoveReference();
+                        var refCount = _queue.DecrementReferenceCount();
+
                         if (refCount == 0)
                         {
                             var removed = _queues.TryRemove(_queueKey, out _);
+
                             if (removed)
                             {
                                 _queue.Dispose();
                             }
                             else
                             {
-                                // This case should never occur, because we used Monitor to avoid race conditions
+                                // This case should never occur, because we used lock to avoid race conditions
                                 // Raise an exception if this occurs to notify us that this code is probably wrong
                                 throw new Exception("Queue could not be removed from dictionary.");
                             }
                         }
-                    }
-                    finally
-                    {
-                        Monitor.Exit(_queues);
                     }
 
                     base.Dispose(true);
