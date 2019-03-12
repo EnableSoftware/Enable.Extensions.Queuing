@@ -18,14 +18,16 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
         private readonly int _queueKey;
         private readonly AzureServiceBusQueue _queue;
+        private readonly IMessageReceiver _messageReceiver;
+        private readonly IMessageSender _messageSender;
         private bool _disposed;
 
         public AzureServiceBusQueueClient(
             string connectionString,
             string queueName)
         {
-            connectionString = connectionString.ToLower();
-            queueName = queueName.ToLower();
+            connectionString = connectionString.ToLowerInvariant();
+            queueName = queueName.ToLowerInvariant();
 
             _queueKey = $"{connectionString}:{queueName}".GetHashCode();
 
@@ -37,30 +39,23 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                     queue.IncrementReferenceCount();
                     return queue;
                 });
-        }
 
-        internal IMessageReceiver MessageReceiver
-        {
-            get => _queue.MessageReceiver;
-        }
-
-        internal IMessageSender MessageSender
-        {
-            get => _queue.MessageSender;
+            _messageReceiver = _queue.MessageReceiver;
+            _messageSender = _queue.MessageSender;
         }
 
         public override Task AbandonAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return MessageReceiver.AbandonAsync(message.LeaseId);
+            return _messageReceiver.AbandonAsync(message.LeaseId);
         }
 
         public override Task CompleteAsync(
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return MessageReceiver.CompleteAsync(message.LeaseId);
+            return _messageReceiver.CompleteAsync(message.LeaseId);
         }
 
         public override async Task<IQueueMessage> DequeueAsync(
@@ -69,7 +64,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             // This timeout is arbitrary. It is needed in order to return null
             // if no messages are queued, and must be long enough to allow time
             // for connection setup.
-            var message = await MessageReceiver.ReceiveAsync(TimeSpan.FromSeconds(10));
+            var message = await _messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(10));
 
             if (message == null)
             {
@@ -83,7 +78,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return MessageSender.SendAsync(CreateMessage(message));
+            return _messageSender.SendAsync(CreateMessage(message));
         }
 
         public override Task EnqueueAsync(
@@ -97,7 +92,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 messageList.Add(CreateMessage(message));
             }
 
-            return MessageSender.SendAsync(messageList);
+            return _messageSender.SendAsync(messageList);
         }
 
         public override Task RegisterMessageHandler(
@@ -118,7 +113,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };
 
-            MessageReceiver.RegisterMessageHandler(
+            _messageReceiver.RegisterMessageHandler(
                 (message, token) => messageHandler(new AzureServiceBusQueueMessage(message), token),
                 options);
 
@@ -129,7 +124,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             IQueueMessage message,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return MessageReceiver.RenewLockAsync(message.LeaseId);
+            return _messageReceiver.RenewLockAsync(message.LeaseId);
         }
 
         protected override void Dispose(bool disposing)
@@ -138,26 +133,16 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             {
                 if (disposing)
                 {
-                    lock (_queues)
+                    var refCount = _queue.DecrementReferenceCount();
+
+                    // TODO Is there a race condition here?
+                    if (refCount == 0)
                     {
-                        var refCount = _queue.DecrementReferenceCount();
+                        var removed = _queues.TryRemove(_queueKey, out _);
 
-                        if (refCount == 0)
+                        if (removed)
                         {
-                            var removed = _queues.TryRemove(_queueKey, out _);
-
-                            if (removed)
-                            {
-                                _queue.Dispose();
-                            }
-                            else
-                            {
-                                // This case should never occur, because we
-                                // used lock to avoid race conditions.
-                                // Raise an exception if this occurs to notify
-                                // us that this code is probably wrong.
-                                throw new Exception("Queue could not be removed from dictionary.");
-                            }
+                            _queue.Dispose();
                         }
                     }
 
