@@ -20,7 +20,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
         public bool AutomaticRecoveryEnabled { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the amount of time the client will wait before re-trying to recover the connection. Defaults to 10 seconds.
+        /// Gets or sets the amount of time the client will wait before retrying to recover the connection. Defaults to 10 seconds.
         /// </summary>
         public TimeSpan NetworkRecoveryInterval { get; set; } = TimeSpan.FromSeconds(10);
 
