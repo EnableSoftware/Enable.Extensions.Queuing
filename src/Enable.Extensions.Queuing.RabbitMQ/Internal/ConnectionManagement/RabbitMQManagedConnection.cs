@@ -8,13 +8,16 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         public RabbitMQManagedConnection(IConnection connection)
         {
             Connection = connection;
+            Id = Guid.NewGuid();
         }
 
-        public IConnection Connection { get; }
+        public Guid Id { get; }
 
-        public int ReferenceCount { get;  private set; }
+        public IConnection Connection { get; private set; }
 
-        public bool Disposed { get; private set; }
+        public int ReferenceCount { get; private set; } = 1;
+
+        public bool ChannelAllocationReached { get; set; }
 
         public void DecrementReferenceCount()
         {
@@ -34,15 +37,12 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
         protected void Dispose(bool disposing)
         {
-            if (!Disposed)
+            if (Connection != null && disposing)
             {
-                if (disposing)
-                {
-                    Connection.Close();
-                    Connection.Dispose();
-                }
+                Connection.Close();
+                Connection.Dispose();
 
-                Disposed = true;
+                Connection = null;
             }
         }
     }

@@ -4,9 +4,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Enable.Extensions.Queuing.Abstractions;
+using Enable.Extensions.Queuing.RabbitMQ.Internal.ConnectionManagement;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Exceptions;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
@@ -14,8 +14,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
     {
         private const string RedeliveryCountHeaderName = "x-redelivered-count";
 
-        private readonly RabbitMQConnectionManager _connectionFactory;
-        private readonly IConnection _connection;
+        private readonly RabbitMQConnectionManager _connectionManager;
+        private readonly RabbitMQManagedChannel _managedChannel;
         private readonly IModel _channel;
         private readonly string _exchangeName;
         private readonly string _queueName;
@@ -29,18 +29,9 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             string queueName,
             QueueMode queueMode = QueueMode.Default)
         {
-            _connectionFactory = connectionManager;
-            _connection = connectionManager.GetOrCreateConnection();
-
-            try
-            {
-                _channel = _connection.CreateModel();
-            }
-            catch (ChannelAllocationException)
-            {
-                _connection = connectionManager.CreateConnection();
-                _channel = _connection.CreateModel();
-            }
+            _connectionManager = connectionManager;
+            _managedChannel = _connectionManager.CreateChannel();
+            _channel = _managedChannel.Channel;
 
             // Declare the dead letter queue.
             _deadLetterQueueName = GetDeadLetterQueueName(queueName);
@@ -254,9 +245,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             {
                 if (disposing)
                 {
-                    _channel.Close();
-                    _channel.Dispose();
-                    _connectionFactory.ReleaseConnection();
+                    _connectionManager.CloseChannel(_managedChannel);
                 }
 
                 _disposed = true;
