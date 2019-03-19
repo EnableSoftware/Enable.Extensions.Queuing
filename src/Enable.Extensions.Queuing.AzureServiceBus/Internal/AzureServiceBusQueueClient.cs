@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,26 +13,35 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
     // TODO Respect cancellationToken
     public class AzureServiceBusQueueClient : BaseQueueClient
     {
-        private readonly string _connectionString;
-        private readonly string _queueName;
-        private readonly MessageReceiver _messageReceiver;
-        private readonly MessageSender _messageSender;
+        private static readonly ConcurrentDictionary<int, AzureServiceBusQueue> _queues
+            = new ConcurrentDictionary<int, AzureServiceBusQueue>();
 
+        private readonly int _queueKey;
+        private readonly AzureServiceBusQueue _queue;
+        private readonly IMessageReceiver _messageReceiver;
+        private readonly IMessageSender _messageSender;
         private bool _disposed;
 
         public AzureServiceBusQueueClient(
             string connectionString,
             string queueName)
         {
-            _connectionString = connectionString;
-            _queueName = queueName;
+            connectionString = connectionString.ToLowerInvariant();
+            queueName = queueName.ToLowerInvariant();
 
-            _messageReceiver = new MessageReceiver(
-                    connectionString,
-                    queueName,
-                    ReceiveMode.PeekLock);
+            _queueKey = $"{connectionString}:{queueName}".GetHashCode();
 
-            _messageSender = new MessageSender(connectionString, queueName);
+            _queue = _queues.AddOrUpdate(
+                _queueKey,
+                new AzureServiceBusQueue(connectionString, queueName),
+                (_, queue) =>
+                {
+                    queue.IncrementReferenceCount();
+                    return queue;
+                });
+
+            _messageReceiver = _queue.MessageReceiver;
+            _messageSender = _queue.MessageSender;
         }
 
         public override Task AbandonAsync(
@@ -123,19 +133,24 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             {
                 if (disposing)
                 {
-                    _messageReceiver.CloseAsync()
-                        .GetAwaiter()
-                        .GetResult();
+                    var refCount = _queue.DecrementReferenceCount();
 
-                    _messageSender.CloseAsync()
-                        .GetAwaiter()
-                        .GetResult();
+                    // TODO Is there a race condition here?
+                    if (refCount == 0)
+                    {
+                        var removed = _queues.TryRemove(_queueKey, out _);
+
+                        if (removed)
+                        {
+                            _queue.Dispose();
+                        }
+                    }
+
+                    base.Dispose(true);
                 }
 
                 _disposed = true;
             }
-
-            base.Dispose(disposing);
         }
 
         private static Func<ExceptionReceivedEventArgs, Task> GetExceptionReceivedHandler(
