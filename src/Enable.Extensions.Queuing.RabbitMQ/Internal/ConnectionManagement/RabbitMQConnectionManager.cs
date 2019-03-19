@@ -60,19 +60,12 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             {
                 channel = managedConnection.Connection.CreateModel();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is ChannelAllocationException || ex is AlreadyClosedException)
             {
-                if (ex is ChannelAllocationException || ex is AlreadyClosedException)
-                {
-                    managedConnection.ChannelAllocationReached = true;
+                managedConnection.ChannelAllocationReached = true;
 
-                    managedConnection = CreateConnection();
-                    channel = managedConnection.Connection.CreateModel();
-                }
-                else
-                {
-                    throw;
-                }
+                managedConnection = CreateConnection();
+                channel = managedConnection.Connection.CreateModel();
             }
 
             return new RabbitMQManagedChannel(channel, managedConnection.Id);
