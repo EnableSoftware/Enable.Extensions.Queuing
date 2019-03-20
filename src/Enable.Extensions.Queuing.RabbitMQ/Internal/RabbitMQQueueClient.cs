@@ -205,11 +205,12 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
                 // Reconfigure quality of service on the channel in order to
                 // support specified level of concurrency. Here we are changing
-                // the prefetch count to a user-specified `MaxConcurrentCalls`.
+                // the prefetch count to a user-specified `MaxConcurrentCalls` or
+                // the explict PrefetchCount if it has been set.
                 // This only affects new consumers on the channel, existing
                 // consumers are unaffected and will have a `prefetchCount` of 1,
                 // as specified in the constructor, above.
-                ConfigureBasicQos(prefetchCount: messageHandlerOptions.MaxConcurrentCalls);
+                ConfigureBasicQos(prefetchCount: GetPrefetchCount(messageHandlerOptions));
 
                 var consumer = new EventingBasicConsumer(_channel);
 
@@ -263,6 +264,20 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             properties.Persistent = true;
 
             return properties;
+        }
+
+        private static int GetPrefetchCount(MessageHandlerOptions messageHandlerOptions)
+        {
+            var prefetchCount = messageHandlerOptions.MaxConcurrentCalls;
+
+            if (messageHandlerOptions is RabbitMQMessageHandlerOptions)
+            {
+                var rabbitMQSpecificOptions = messageHandlerOptions as RabbitMQMessageHandlerOptions;
+
+                prefetchCount = rabbitMQSpecificOptions.PrefetchCount ?? rabbitMQSpecificOptions.MaxConcurrentCalls;
+            }
+
+            return prefetchCount;
         }
 
         private string GetDeadLetterQueueName(string queueName)
