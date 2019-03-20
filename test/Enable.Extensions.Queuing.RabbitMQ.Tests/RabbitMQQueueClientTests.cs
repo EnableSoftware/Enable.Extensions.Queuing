@@ -251,25 +251,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
             var options = new MessageHandlerOptions
             {
                 MaxConcurrentCalls = 1,
-                ExceptionReceivedHandler = (_) => Task.CompletedTask
-            };
-
-            // Act
-            await _sut.RegisterMessageHandler(MessageHandler, options);
-        }
-
-        [Fact]
-        public async Task RegisterMessageHandler_CanSetPrefectCount()
-        {
-            // Arrange
-            Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
-            {
-                throw new Exception("There should be no messages to process.");
-            }
-
-            var options = new RabbitMQMessageHandlerOptions
-            {
-                MaxConcurrentCalls = 1,
                 ExceptionReceivedHandler = (_) => Task.CompletedTask,
                 PrefetchCount = 2
             };

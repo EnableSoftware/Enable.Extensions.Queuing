@@ -210,7 +210,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 // This only affects new consumers on the channel, existing
                 // consumers are unaffected and will have a `prefetchCount` of 1,
                 // as specified in the constructor, above.
-                ConfigureBasicQos(prefetchCount: GetPrefetchCount(messageHandlerOptions));
+                ConfigureBasicQos(prefetchCount: messageHandlerOptions.PrefetchCount ?? messageHandlerOptions.MaxConcurrentCalls);
 
                 var consumer = new EventingBasicConsumer(_channel);
 
@@ -264,20 +264,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             properties.Persistent = true;
 
             return properties;
-        }
-
-        private static int GetPrefetchCount(MessageHandlerOptions messageHandlerOptions)
-        {
-            var prefetchCount = messageHandlerOptions.MaxConcurrentCalls;
-
-            if (messageHandlerOptions is RabbitMQMessageHandlerOptions)
-            {
-                var rabbitMQSpecificOptions = messageHandlerOptions as RabbitMQMessageHandlerOptions;
-
-                prefetchCount = rabbitMQSpecificOptions.PrefetchCount ?? rabbitMQSpecificOptions.MaxConcurrentCalls;
-            }
-
-            return prefetchCount;
         }
 
         private string GetDeadLetterQueueName(string queueName)

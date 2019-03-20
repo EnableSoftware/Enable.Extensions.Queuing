@@ -28,7 +28,9 @@ namespace Enable.Extensions.Queuing.Abstractions
 
                 _maxConcurrentCalls = value;
             }
-         }
+        }
+
+        public int? PrefetchCount { get; set; }
 
         public Func<MessageHandlerExceptionContext, Task> ExceptionReceivedHandler { get; set; }
     }
