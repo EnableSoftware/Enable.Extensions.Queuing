@@ -96,7 +96,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                     .Find(c => c.hash == _connectionHash
                     && !c.managedConnection.ChannelAllocationReached);
 
-                if (managedConnection == null || managedConnection?.Connection == null)
+                if (managedConnection?.Connection == null)
                 {
                     return CreateConnection();
                 }
@@ -117,7 +117,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             {
                 var(hash, managedConnection) = _connections.Find(c => c.managedConnection.Id == connectionId);
 
-                if (managedConnection != null || managedConnection?.Connection != null)
+                if (managedConnection?.Connection != null)
                 {
                     managedConnection.DecrementReferenceCount();
 
