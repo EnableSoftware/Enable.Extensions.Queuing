@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Enable.Extensions.Queuing.RabbitMQ.Internal.ConnectionManagement;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 
-namespace Enable.Extensions.Queuing.RabbitMQ.Internal
+namespace Enable.Extensions.Queuing.RabbitMQ.Internal.ConnectionManagement
 {
     internal class RabbitMQConnectionManager
     {
@@ -72,7 +70,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         }
 
         /// <summary>
-        /// Closes and disposes the channel. The underlying connection will be released and closed if no other clients are using it.
+        /// Closes and disposes the channel. The underlying connection will be released and closed if no other clients
+        /// are using it.
         /// </summary>
         public void CloseChannel(RabbitMQManagedChannel managedChannel)
         {
@@ -85,7 +84,8 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         }
 
         /// <summary>
-        /// Provides access to the underlying RabbitMQ connection. Clients need not be concerned of the state of the connections available.
+        /// Provides access to the underlying RabbitMQ connection. Clients need not be concerned of the state of the
+        /// connections available.
         /// <see cref="ReleaseConnection"/> must be called when the connection is no longer required.
         /// </summary>
         private RabbitMQManagedConnection GetConnection()
@@ -132,7 +132,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         }
 
         /// <summary>
-        /// Explicity creates a new RabbitMQ connection.
+        /// Explicitly creates a new RabbitMQ connection.
         /// </summary>
         private RabbitMQManagedConnection CreateConnection()
         {

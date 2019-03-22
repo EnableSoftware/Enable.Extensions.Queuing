@@ -1,7 +1,7 @@
 using System;
 using RabbitMQ.Client;
 
-namespace Enable.Extensions.Queuing.RabbitMQ.Internal
+namespace Enable.Extensions.Queuing.RabbitMQ.Internal.ConnectionManagement
 {
     internal class RabbitMQManagedConnection
     {

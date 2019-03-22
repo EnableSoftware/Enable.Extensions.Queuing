@@ -1,7 +1,7 @@
 using System;
 using Enable.Extensions.Queuing.Abstractions;
 using Enable.Extensions.Queuing.RabbitMQ.Internal;
-using RabbitMQ.Client;
+using Enable.Extensions.Queuing.RabbitMQ.Internal.ConnectionManagement;
 
 namespace Enable.Extensions.Queuing.RabbitMQ
 {
