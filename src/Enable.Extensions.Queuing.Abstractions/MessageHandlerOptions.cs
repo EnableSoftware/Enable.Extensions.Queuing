@@ -45,7 +45,7 @@ namespace Enable.Extensions.Queuing.Abstractions
                     throw new ArgumentOutOfRangeException(
                         nameof(value),
                         value,
-                        $"The specified value '{value}' is invalid. '{nameof(PrefetchCount)}' must be greater than zero.");
+                        $"The specified value '{value}' is invalid. '{nameof(PrefetchCount)}' must be a positive integer.");
                 }
 
                 _prefetchCount = value;
