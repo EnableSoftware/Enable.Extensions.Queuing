@@ -6,6 +6,7 @@ namespace Enable.Extensions.Queuing.Abstractions
     public class MessageHandlerOptions
     {
         private int _maxConcurrentCalls = 1;
+        private int _prefetchCount;
 
         public bool AutoComplete { get; set; } = true;
 
@@ -30,7 +31,26 @@ namespace Enable.Extensions.Queuing.Abstractions
             }
         }
 
-        public int? PrefetchCount { get; set; }
+        public int PrefetchCount
+        {
+            get
+            {
+                return _prefetchCount;
+            }
+
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(value),
+                        value,
+                        $"The specified value '{value}' is invalid. '{nameof(PrefetchCount)}' must be greater than zero.");
+                }
+
+                _prefetchCount = value;
+            }
+        }
 
         public Func<MessageHandlerExceptionContext, Task> ExceptionReceivedHandler { get; set; }
     }

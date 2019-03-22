@@ -113,7 +113,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };
 
-            _messageReceiver.PrefetchCount = messageHandlerOptions.PrefetchCount ?? messageHandlerOptions.MaxConcurrentCalls;
+            _messageReceiver.PrefetchCount = messageHandlerOptions.PrefetchCount;
 
             _messageReceiver.RegisterMessageHandler(
                 (message, token) => messageHandler(new AzureServiceBusQueueMessage(message), token),

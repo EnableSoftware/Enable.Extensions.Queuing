@@ -205,12 +205,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
                 // Reconfigure quality of service on the channel in order to
                 // support specified level of concurrency. Here we are changing
-                // the prefetch count to a user-specified `MaxConcurrentCalls` or
-                // the explict `PrefetchCount` value if it has been set.
+                // the prefetch count to a user-specified `PrefetchCount`
                 // This only affects new consumers on the channel, existing
                 // consumers are unaffected and will have a `prefetchCount` of 1,
                 // as specified in the constructor, above.
-                ConfigureBasicQos(prefetchCount: messageHandlerOptions.PrefetchCount ?? messageHandlerOptions.MaxConcurrentCalls);
+                ConfigureBasicQos(prefetchCount: messageHandlerOptions.PrefetchCount);
 
                 var consumer = new EventingBasicConsumer(_channel);
 
