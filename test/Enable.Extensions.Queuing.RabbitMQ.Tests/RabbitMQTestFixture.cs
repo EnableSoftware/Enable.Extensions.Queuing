@@ -40,10 +40,15 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
             var connection = _connectionFactory.CreateConnection();
             var channel = connection.CreateModel();
 
-            channel.QueuePurge(QueueName);
-
-            connection.Close();
-            connection.Dispose();
+            try
+            {
+                channel.QueuePurge(QueueName);
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
         }
 
         public void Dispose()
@@ -76,12 +81,16 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Tests
         {
             var connection = _connectionFactory.CreateConnection();
             var channel = connection.CreateModel();
+
+            try
             {
                 channel.QueueDelete(QueueName, ifUnused: false, ifEmpty: false);
             }
-
-            connection.Close();
-            connection.Dispose();
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
         }
     }
 }
