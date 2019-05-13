@@ -26,9 +26,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             string connectionString,
             string queueName)
         {
-            connectionString = connectionString.ToLowerInvariant();
-            queueName = queueName.ToLowerInvariant();
-
             _queueKey = $"{connectionString}:{queueName}".GetHashCode();
 
             _queue = _queues.AddOrUpdate(
