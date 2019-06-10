@@ -198,6 +198,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
+
+            // Clean up
+            // Delay current thread to give service bus time to complete the dequeued message before the sut is disposed.
+            // This ensures the message is not on the queue when another test starts.
+            await Task.Delay(TimeSpan.FromSeconds(5));
         }
 
         [Fact]
@@ -286,6 +291,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
+
+            // Clean up
+            // Delay current thread to give service bus time to abandon the message before the sut is disposed.
+            // This ensures the message is not on the queue when another test starts.
+            await Task.Delay(TimeSpan.FromSeconds(5));
         }
 
         [Fact]
