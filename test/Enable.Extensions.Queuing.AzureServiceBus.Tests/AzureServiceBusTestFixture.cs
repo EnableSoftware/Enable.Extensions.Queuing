@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus;
@@ -42,6 +43,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             await messageReceiver.CloseAsync();
 
             messageReceiver = null;
+        }
+
+        public string CreateMessage([CallerMemberName] string callingMethodName = "")
+        {
+            return callingMethodName + "_" + Guid.NewGuid().ToString();
         }
 
         private static string GetEnvironmentVariable(string name)

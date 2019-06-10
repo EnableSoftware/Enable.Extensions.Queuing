@@ -34,7 +34,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task EnqueueAsync_CanInvokeWithString()
         {
             // Arrange
-            var content = Guid.NewGuid().ToString();
+            var content = _fixture.CreateMessage();
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
@@ -48,7 +48,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task EnqueueAsync_CanInvokeWithByteArray()
         {
             // Arrange
-            var content = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
+            var content = Encoding.UTF8.GetBytes(_fixture.CreateMessage());
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
@@ -64,7 +64,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Arrange
             var content = new CustomMessageType
             {
-                Message = Guid.NewGuid().ToString()
+                Message = _fixture.CreateMessage()
             };
 
             // Act
@@ -81,8 +81,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Arrange
             var messages = new List<string>
             {
-                Guid.NewGuid().ToString(),
-                Guid.NewGuid().ToString()
+                _fixture.CreateMessage(),
+                _fixture.CreateMessage()
             };
 
             // Act
@@ -109,7 +109,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task DequeueAsync_ReturnsEnqueuedMessage()
         {
             // Arrange
-            var content = Guid.NewGuid().ToString();
+            var content = _fixture.CreateMessage();
 
             await _sut.EnqueueAsync(content, CancellationToken.None);
 
@@ -127,7 +127,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task DequeueAsync_CanDeserializeMessage()
         {
             // Arrange
-            var content = Guid.NewGuid().ToString();
+            var content = _fixture.CreateMessage();
 
             await _sut.EnqueueAsync(content, CancellationToken.None);
 
@@ -146,7 +146,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                _fixture.CreateMessage(),
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
@@ -160,7 +160,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                _fixture.CreateMessage(),
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
@@ -193,7 +193,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                _fixture.CreateMessage(),
                 CancellationToken.None);
 
             // Assert
@@ -286,7 +286,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                _fixture.CreateMessage(),
                 CancellationToken.None);
 
             // Assert
@@ -303,7 +303,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                _fixture.CreateMessage(),
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
