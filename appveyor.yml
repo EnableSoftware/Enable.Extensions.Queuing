@@ -26,7 +26,7 @@ before_build:
 build:
   parallel: true
   publish_nuget: true
-  verbosity: detailed
+  verbosity: minimal
 
 before_test: 
   - choco install rabbitmq --ignoredependencies -y 
