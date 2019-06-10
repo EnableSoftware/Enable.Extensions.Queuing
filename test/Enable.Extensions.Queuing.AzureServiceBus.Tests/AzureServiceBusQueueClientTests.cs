@@ -33,6 +33,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         [Fact]
         public async Task EnqueueAsync_CanInvokeWithString()
         {
+            Console.WriteLine("{0} Starting method: EnqueueAsync_CanInvokeWithString", DateTime.Now);
+
             // Arrange
             var content = _fixture.CreateMessage();
 
@@ -42,11 +44,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Clean up
             var message = await _sut.DequeueAsync(CancellationToken.None);
             await _sut.CompleteAsync(message, CancellationToken.None);
+
+            Console.WriteLine("{0} Finishing method: EnqueueAsync_CanInvokeWithString", DateTime.Now);
         }
 
         [Fact]
         public async Task EnqueueAsync_CanInvokeWithByteArray()
         {
+            Console.WriteLine("{0} Starting method: EnqueueAsync_CanInvokeWithByteArray", DateTime.Now);
             // Arrange
             var content = Encoding.UTF8.GetBytes(_fixture.CreateMessage());
 
@@ -56,11 +61,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Clean up
             var message = await _sut.DequeueAsync(CancellationToken.None);
             await _sut.CompleteAsync(message, CancellationToken.None);
+
+            Console.WriteLine("{0} Finishing method: EnqueueAsync_CanInvokeWithByteArray", DateTime.Now);
         }
 
         [Fact]
         public async Task EnqueueAsync_CanInvokeWithCustomMessageType()
         {
+            Console.WriteLine("{0} Starting method: EnqueueAsync_CanInvokeWithCustomMessageType", DateTime.Now);
+
             // Arrange
             var content = new CustomMessageType
             {
@@ -73,11 +82,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Clean up
             var message = await _sut.DequeueAsync(CancellationToken.None);
             await _sut.CompleteAsync(message, CancellationToken.None);
+
+            Console.WriteLine("{0} Finishing method: EnqueueAsync_CanInvokeWithCustomMessageType", DateTime.Now);
         }
 
         [Fact]
         public async Task EnqueueAsync_CanInvokeWithMultipleMessages()
         {
+            Console.WriteLine("{0} Starting method: EnqueueAsync_CanInvokeWithMultipleMessages", DateTime.Now);
+
             // Arrange
             var messages = new List<string>
             {
@@ -93,21 +106,29 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             await _sut.CompleteAsync(message1, CancellationToken.None);
             var message2 = await _sut.DequeueAsync(CancellationToken.None);
             await _sut.CompleteAsync(message2, CancellationToken.None);
+
+            Console.WriteLine("{0} Finish method: EnqueueAsync_CanInvokeWithMultipleMessages", DateTime.Now);
         }
 
         [Fact]
         public async Task DequeueAsync_CanInvoke()
         {
+            Console.WriteLine("{0} Starting method: DequeueAsync_CanInvoke", DateTime.Now);
+
             // Act
             var message = await _sut.DequeueAsync(CancellationToken.None);
 
             // Assert
             Assert.Null(message);
+
+            Console.WriteLine("{0} Finishing method: DequeueAsync_CanInvoke", DateTime.Now);
         }
 
         [Fact]
         public async Task DequeueAsync_ReturnsEnqueuedMessage()
         {
+            Console.WriteLine("{0} Starting method: DequeueAsync_ReturnsEnqueuedMessage", DateTime.Now);
+
             // Arrange
             var content = _fixture.CreateMessage();
 
@@ -121,12 +142,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Clean up
             await _sut.CompleteAsync(message, CancellationToken.None);
+
+            Console.WriteLine("{0} Finishing method: DequeueAsync_ReturnsEnqueuedMessage", DateTime.Now);
         }
 
         [Fact]
         public async Task DequeueAsync_CanDeserializeMessage()
         {
-            Console.WriteLine("{0}, Starting method: DequeueAsync_CanDeserializeMessage", DateTime.Now);
+            Console.WriteLine("{0} Starting method: DequeueAsync_CanDeserializeMessage", DateTime.Now);
 
             // Arrange
             var content = _fixture.CreateMessage();
@@ -141,13 +164,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Clean up
             await _sut.CompleteAsync(message, CancellationToken.None);
-            Console.WriteLine("{0}, Finishing method: DequeueAsync_CanDeserializeMessage", DateTime.Now);
+
+            Console.WriteLine("{0} Finishing method: DequeueAsync_CanDeserializeMessage", DateTime.Now);
         }
 
         [Fact]
         public async Task AbandonAsync_CanInvoke()
         {
-            Console.WriteLine("{0}, Starting method: AbandonAsync_CanInvoke", DateTime.Now);
+            Console.WriteLine("{0} Starting method: AbandonAsync_CanInvoke", DateTime.Now);
+
             // Arrange
             await _sut.EnqueueAsync(
                 _fixture.CreateMessage(),
@@ -158,12 +183,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Act
             await _sut.AbandonAsync(message, CancellationToken.None);
 
-            Console.WriteLine("{0}, Finishing method: AbandonAsync_CanInvoke", DateTime.Now);
+            Console.WriteLine("{0} Finishing method: AbandonAsync_CanInvoke", DateTime.Now);
         }
 
         [Fact]
         public async Task CompleteAsync_CanInvoke()
         {
+            Console.WriteLine("{0} Starting method: CompleteAsync_CanInvoke", DateTime.Now);
+
             // Arrange
             await _sut.EnqueueAsync(
                 _fixture.CreateMessage(),
@@ -173,14 +200,20 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.CompleteAsync(message, CancellationToken.None);
+
+            Console.WriteLine("{0} Finishing method: CompleteAsync_CanInvoke", DateTime.Now);
         }
 
         [Fact]
         public async Task RegisterMessageHandler_CanInvoke()
         {
+            Console.WriteLine("{0} Starting method: RegisterMessageHandler_CanInvoke", DateTime.Now);
+
             // Act
             await _sut.RegisterMessageHandler(
                 (message, cancellationToken) => throw new Exception("There should be no messages to process."));
+
+            Console.WriteLine("{0} Finishing method: RegisterMessageHandler_CanInvoke", DateTime.Now);
         }
 
         [Fact]
@@ -216,6 +249,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         [Fact]
         public async Task RegisterMessageHandler_ThrowsOnMutipleMessageHandlerRegistrations()
         {
+            Console.WriteLine("{0}, Starting method: RegisterMessageHandler_ThrowsOnMutipleMessageHandlerRegistrations", DateTime.Now);
             // Arrange
             Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
             {
@@ -229,11 +263,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.IsType<InvalidOperationException>(exception);
+
+            Console.WriteLine("{0}, Finishing method: RegisterMessageHandler_ThrowsOnMutipleMessageHandlerRegistrations", DateTime.Now);
         }
 
         [Fact]
         public async Task RegisterMessageHandler_ThrowsForNullMessageHandlerOptions()
         {
+            Console.WriteLine("{0} Starting method: RegisterMessageHandler_ThrowsForNullMessageHandlerOptions", DateTime.Now);
+
             // Arrange
             Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
             {
@@ -246,11 +284,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Assert
             Assert.IsType<ArgumentNullException>(exception);
+
+            Console.WriteLine("{0} Finishing method: RegisterMessageHandler_ThrowsForNullMessageHandlerOptions", DateTime.Now);
         }
 
         [Fact]
         public async Task RegisterMessageHandler_CanSetMessageHandlerOptions()
         {
+            Console.WriteLine("{0} Starting method: RegisterMessageHandler_CanSetMessageHandlerOptions", DateTime.Now);
+
             // Arrange
             Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
             {
@@ -265,11 +307,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.RegisterMessageHandler(MessageHandler, options);
+
+            Console.WriteLine("{0} Finishing method: RegisterMessageHandler_CanSetMessageHandlerOptions", DateTime.Now);
         }
 
         [Fact]
         public async Task RegisterMessageHandler_ExceptionHandlerInvoked()
         {
+            Console.WriteLine("{0} Starting method: RegisterMessageHandler_ExceptionHandlerInvoked", DateTime.Now);
+
             // Arrange
             var evt = new ManualResetEvent(false);
 
@@ -304,11 +350,15 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Delay current thread to give service bus time to abandon the message before the sut is disposed.
             // This ensures the message is not on the queue when another test starts.
             await Task.Delay(TimeSpan.FromSeconds(5));
+
+            Console.WriteLine("{0} Finishing method: RegisterMessageHandler_ExceptionHandlerInvoked", DateTime.Now);
         }
 
         [Fact]
         public async Task RenewLockAsync_CanInvoke()
         {
+            Console.WriteLine("{0} Starting method: RenewLockAsync_CanInvoke", DateTime.Now);
+
             // Arrange
             await _sut.EnqueueAsync(
                 _fixture.CreateMessage(),
@@ -321,6 +371,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Clean up
             await _sut.CompleteAsync(message, CancellationToken.None);
+
+            Console.WriteLine("{0} Finishing method: RenewLockAsync_CanInvoke", DateTime.Now);
         }
 
         public void Dispose()
