@@ -126,6 +126,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         [Fact]
         public async Task DequeueAsync_CanDeserializeMessage()
         {
+            Console.WriteLine("{0}, Starting method: DequeueAsync_CanDeserializeMessage", DateTime.Now);
+
             // Arrange
             var content = _fixture.CreateMessage();
 
@@ -139,11 +141,13 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Clean up
             await _sut.CompleteAsync(message, CancellationToken.None);
+            Console.WriteLine("{0}, Finishing method: DequeueAsync_CanDeserializeMessage", DateTime.Now);
         }
 
         [Fact]
         public async Task AbandonAsync_CanInvoke()
         {
+            Console.WriteLine("{0}, Starting method: AbandonAsync_CanInvoke", DateTime.Now);
             // Arrange
             await _sut.EnqueueAsync(
                 _fixture.CreateMessage(),
@@ -153,6 +157,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.AbandonAsync(message, CancellationToken.None);
+
+            Console.WriteLine("{0}, Finishing method: AbandonAsync_CanInvoke", DateTime.Now);
         }
 
         [Fact]
@@ -181,6 +187,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task RegisterMessageHandler_MessageHandlerInvoked()
         {
             // Arrange
+            Console.WriteLine("{0}, Starting method: RegisterMessageHandler_MessageHandlerInvoked", DateTime.Now);
             var evt = new ManualResetEvent(false);
 
             Task MessageHandler(IQueueMessage message, CancellationToken cancellationToken)
@@ -203,6 +210,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Delay current thread to give service bus time to complete the dequeued message before the sut is disposed.
             // This ensures the message is not on the queue when another test starts.
             await Task.Delay(TimeSpan.FromSeconds(5));
+            Console.WriteLine("{0}, Finishing method: RegisterMessageHandler_MessageHandlerInvoked", DateTime.Now);
         }
 
         [Fact]
@@ -327,14 +335,19 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             {
                 if (disposing)
                 {
+                    Console.WriteLine("{0} Disposing", DateTime.Now);
                     _sut.Dispose();
 
                     try
                     {
+                        Console.WriteLine("{0} Clearing queue", DateTime.Now);
+
                         // Make a best effort to clear our test queue.
                         _fixture.ClearQueue()
                             .GetAwaiter()
                             .GetResult();
+
+                        Console.WriteLine("{0} Cleared queue", DateTime.Now);
                     }
                     catch
                     {
