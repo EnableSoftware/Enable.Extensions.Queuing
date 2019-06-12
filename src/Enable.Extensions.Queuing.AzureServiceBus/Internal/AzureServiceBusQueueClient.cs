@@ -24,6 +24,13 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
         public AzureServiceBusQueueClient(
             string connectionString,
+            string queueName)
+            : this(connectionString, queueName, 0)
+        {
+        }
+
+        public AzureServiceBusQueueClient(
+            string connectionString,
             string queueName,
             int prefetchCount)
         {
@@ -41,13 +48,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
             _messageReceiver = _queue.MessageReceiver;
             _messageSender = _queue.MessageSender;
-        }
-
-        public AzureServiceBusQueueClient(
-            string connectionString,
-            string queueName)
-            : this(connectionString, queueName, 0)
-        {
         }
 
         public override Task AbandonAsync(
