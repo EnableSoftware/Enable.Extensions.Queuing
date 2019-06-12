@@ -25,11 +25,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         public AzureServiceBusQueueClient(
             string connectionString,
             string queueName,
-            AzureServiceBusQueueClientOptions options = null)
+            int prefetchCount)
         {
             connectionString = connectionString.ToLowerInvariant();
             queueName = queueName.ToLowerInvariant();
-            var prefetchCount = (options?.PrefetchCount).GetValueOrDefault();
 
             _queueKey = $"{connectionString}:{queueName}:{prefetchCount}".GetHashCode();
 
@@ -45,6 +44,13 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
             _messageReceiver = _queue.MessageReceiver;
             _messageSender = _queue.MessageSender;
+        }
+
+        public AzureServiceBusQueueClient(
+            string connectionString,
+            string queueName)
+            : this(connectionString, queueName, 0)
+        {
         }
 
         public override Task AbandonAsync(
