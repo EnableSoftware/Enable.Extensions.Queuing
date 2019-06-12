@@ -24,20 +24,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
         public AzureServiceBusQueueClient(
             string connectionString,
-            string queueName)
-            : this(connectionString, queueName, 0)
-        {
-        }
-
-        public AzureServiceBusQueueClient(
-            string connectionString,
             string queueName,
-            int prefetchCount)
+            AzureServiceBusQueueClientOptions options = null)
         {
             connectionString = connectionString.ToLowerInvariant();
             queueName = queueName.ToLowerInvariant();
+            var prefetchCount = (options?.PrefetchCount).GetValueOrDefault();
 
-            _queueKey = $"{connectionString}:{queueName}".GetHashCode();
+            _queueKey = $"{connectionString}:{queueName}:{prefetchCount}".GetHashCode();
 
             _queue = _queues.AddOrUpdate(
                 _queueKey,
@@ -45,11 +39,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 (_, queue) =>
                 {
                     queue.IncrementReferenceCount();
+                    queue.MessageReceiver.PrefetchCount = prefetchCount;
                     return queue;
                 });
 
             _messageReceiver = _queue.MessageReceiver;
-            _messageReceiver.PrefetchCount = prefetchCount;
             _messageSender = _queue.MessageSender;
         }
 

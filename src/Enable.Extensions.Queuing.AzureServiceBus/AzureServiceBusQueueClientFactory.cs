@@ -25,6 +25,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
 
         public IQueueClient GetQueueReference(string queueName)
         {
+            return GetQueueReference(queueName, null);
+        }
+
+        public IQueueClient GetQueueReference(string queueName, AzureServiceBusQueueClientOptions options = null)
+        {
             if (string.IsNullOrWhiteSpace(queueName))
             {
                 throw new ArgumentException(nameof(queueName));
@@ -33,7 +38,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
             return new AzureServiceBusQueueClient(
                 _options.ConnectionString,
                 queueName,
-                _options.PrefetchCount);
+                options);
         }
     }
 }
