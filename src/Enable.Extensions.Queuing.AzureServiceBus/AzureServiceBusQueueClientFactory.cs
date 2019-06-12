@@ -32,7 +32,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
 
             return new AzureServiceBusQueueClient(
                 _options.ConnectionString,
-                queueName);
+                queueName,
+                _options.PrefetchCount);
         }
     }
 }
