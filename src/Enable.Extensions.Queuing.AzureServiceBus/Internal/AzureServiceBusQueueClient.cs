@@ -25,6 +25,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         public AzureServiceBusQueueClient(
             string connectionString,
             string queueName)
+            : this(connectionString, queueName, 0)
+        {
+        }
+
+        public AzureServiceBusQueueClient(
+            string connectionString,
+            string queueName,
+            int prefetchCount)
         {
             connectionString = connectionString.ToLowerInvariant();
             queueName = queueName.ToLowerInvariant();
@@ -41,6 +49,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 });
 
             _messageReceiver = _queue.MessageReceiver;
+            _messageReceiver.PrefetchCount = prefetchCount;
             _messageSender = _queue.MessageSender;
         }
 
@@ -112,8 +121,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 MaxConcurrentCalls = messageHandlerOptions.MaxConcurrentCalls,
                 MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
             };
-
-            _messageReceiver.PrefetchCount = messageHandlerOptions.MaxConcurrentCalls;
 
             _messageReceiver.RegisterMessageHandler(
                 (message, token) => messageHandler(new AzureServiceBusQueueMessage(message), token),
