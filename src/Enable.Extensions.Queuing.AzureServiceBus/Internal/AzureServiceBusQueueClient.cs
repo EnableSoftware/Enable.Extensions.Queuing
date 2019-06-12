@@ -27,9 +27,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             string queueName,
             int prefetchCount)
         {
-            connectionString = connectionString.ToLowerInvariant();
-            queueName = queueName.ToLowerInvariant();
-
             _queueKey = $"{connectionString}:{queueName}:{prefetchCount}".GetHashCode();
 
             _queue = _queues.AddOrUpdate(
