@@ -7,14 +7,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
     public class AzureServiceBusQueueClientFactory : IQueueClientFactory
     {
         private readonly AzureServiceBusQueueClientFactoryOptions _options;
-        private readonly int _prefetchCount;
 
         public AzureServiceBusQueueClientFactory(AzureServiceBusQueueClientFactoryOptions options)
-            : this(options, 0)
-        {
-        }
-
-        public AzureServiceBusQueueClientFactory(AzureServiceBusQueueClientFactoryOptions options, int prefetchCount)
         {
             if (options == null)
             {
@@ -27,7 +21,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
             }
 
             _options = options;
-            _prefetchCount = prefetchCount;
         }
 
         public IQueueClient GetQueueReference(string queueName)
@@ -40,7 +33,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
             return new AzureServiceBusQueueClient(
                 _options.ConnectionString,
                 queueName,
-                _prefetchCount);
+                _options.PrefetchCount);
         }
     }
 }
