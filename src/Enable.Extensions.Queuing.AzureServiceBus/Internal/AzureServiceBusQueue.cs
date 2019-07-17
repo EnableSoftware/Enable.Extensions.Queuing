@@ -11,12 +11,13 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         private int _referenceCount = 1;
         private bool _disposed = false;
 
-        public AzureServiceBusQueue(string connectionString, string queueName)
+        public AzureServiceBusQueue(string connectionString, string queueName, int prefetchCount)
         {
             MessageReceiver = new MessageReceiver(
                 connectionString,
                 queueName,
-                ReceiveMode.PeekLock);
+                ReceiveMode.PeekLock,
+                prefetchCount: prefetchCount);
 
             MessageSender = new MessageSender(connectionString, queueName);
         }

@@ -38,11 +38,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
             _queue = _queues.AddOrUpdate(
                 _queueKey,
-                new AzureServiceBusQueue(connectionString, queueName),
+                new AzureServiceBusQueue(connectionString, queueName, prefetchCount),
                 (_, queue) =>
                 {
                     queue.IncrementReferenceCount();
-                    queue.MessageReceiver.PrefetchCount = prefetchCount;
                     return queue;
                 });
 
