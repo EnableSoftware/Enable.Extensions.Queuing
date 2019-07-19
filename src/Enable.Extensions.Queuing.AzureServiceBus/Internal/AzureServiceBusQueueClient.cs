@@ -180,6 +180,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         {
             return new Message(message.Body)
             {
+                MessageId = message.MessageId,
                 ContentType = "application/json"
             };
         }
