@@ -20,7 +20,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             var options = new AzureServiceBusQueueClientFactoryOptions
             {
-                ConnectionString = fixture.ConnectionString
+                ConnectionString = fixture.ConnectionString,
+                DisposeQueueWhenNotInUse = true
             };
 
             var queueFactory = new AzureServiceBusQueueClientFactory(options);
