@@ -20,19 +20,21 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         private readonly AzureServiceBusQueue _queue;
         private readonly IMessageReceiver _messageReceiver;
         private readonly IMessageSender _messageSender;
+        private readonly bool _disposeQueueWhenNotInUse;
         private bool _disposed;
 
         public AzureServiceBusQueueClient(
             string connectionString,
             string queueName)
-            : this(connectionString, queueName, 0)
+            : this(connectionString, queueName, 0, false)
         {
         }
 
         public AzureServiceBusQueueClient(
             string connectionString,
             string queueName,
-            int prefetchCount)
+            int prefetchCount,
+            bool disposeQueueWhenNotInUse)
         {
             _queueKey = $"{connectionString}:{queueName}:{prefetchCount}".GetHashCode();
 
@@ -47,6 +49,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
 
             _messageReceiver = _queue.MessageReceiver;
             _messageSender = _queue.MessageSender;
+
+            _disposeQueueWhenNotInUse = disposeQueueWhenNotInUse;
         }
 
         public override Task AbandonAsync(
@@ -141,7 +145,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                     var refCount = _queue.DecrementReferenceCount();
 
                     // TODO Is there a race condition here?
-                    if (refCount == 0)
+                    if (refCount == 0 && _disposeQueueWhenNotInUse)
                     {
                         var removed = _queues.TryRemove(_queueKey, out _);
 
