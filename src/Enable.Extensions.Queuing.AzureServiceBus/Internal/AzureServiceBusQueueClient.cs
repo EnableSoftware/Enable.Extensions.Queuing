@@ -176,13 +176,19 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             return ExceptionReceivedHandler;
         }
 
-        private Message CreateMessage(IQueueMessage message)
+        private Message CreateMessage(IQueueMessage queueMessage)
         {
-            return new Message(message.Body)
+            var message = new Message(queueMessage.Body)
             {
-                MessageId = message.MessageId,
                 ContentType = "application/json"
             };
+
+            if (!string.IsNullOrEmpty(queueMessage.MessageId))
+            {
+                message.MessageId = queueMessage.MessageId;
+            }
+
+            return message;
         }
     }
 }
