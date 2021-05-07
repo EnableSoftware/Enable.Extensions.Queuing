@@ -11,14 +11,14 @@ namespace Enable.Extensions.Queuing.Abstractions
     {
         public abstract Task AbandonAsync(
             IQueueMessage message,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         public abstract Task CompleteAsync(
             IQueueMessage message,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         public abstract Task<IQueueMessage> DequeueAsync(
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         public void Dispose()
         {
@@ -28,36 +28,36 @@ namespace Enable.Extensions.Queuing.Abstractions
 
         public abstract Task EnqueueAsync(
             IQueueMessage message,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         public abstract Task EnqueueAsync(
             IEnumerable<IQueueMessage> messages,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         public Task EnqueueAsync(
             byte[] content,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             return EnqueueAsync(content, null, cancellationToken);
         }
 
         public Task EnqueueAsync(
             string content,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             return EnqueueAsync(content, null, cancellationToken);
         }
 
         public Task EnqueueAsync<T>(
             T content,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             return EnqueueAsync(content, null, cancellationToken);
         }
 
         public Task EnqueueAsync<T>(
             IEnumerable<T> messages,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             return EnqueueAsync(messages, null, cancellationToken);
         }
@@ -119,7 +119,7 @@ namespace Enable.Extensions.Queuing.Abstractions
 
         public abstract Task RenewLockAsync(
             IQueueMessage message,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         protected virtual void Dispose(bool disposing)
         {
