@@ -97,6 +97,165 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         }
 
         [Fact]
+        public async Task EnqueueAsync_CanInvokeWithStringAndSessionId()
+        {
+            // Arrange
+            var content = Guid.NewGuid().ToString();
+            var sessionId = Guid.NewGuid().ToString();
+
+            // Act
+            await _sut.EnqueueAsync(content, sessionId, CancellationToken.None);
+
+            // Clean up
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_InvokeWithStringSetsSessionId()
+        {
+            // Arrange
+            var content = Guid.NewGuid().ToString();
+            var sessionId = "session-id";
+
+            // Act
+            await _sut.EnqueueAsync(content, sessionId, CancellationToken.None);
+
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+
+            // Assert
+            Assert.Equal(sessionId, message.SessionId);
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_CanInvokeWithByteArrayAndSessionId()
+        {
+            // Arrange
+            var content = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
+            var sessionId = Guid.NewGuid().ToString();
+
+            // Act
+            await _sut.EnqueueAsync(content, sessionId, CancellationToken.None);
+
+            // Clean up
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_InvokeWithByteArraySetsSessionId()
+        {
+            // Arrange
+            var content = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
+            var sessionId = "session-id";
+
+            // Act
+            await _sut.EnqueueAsync(content, sessionId, CancellationToken.None);
+
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+
+            // Assert
+            Assert.Equal(sessionId, message.SessionId);
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_CanInvokeWithCustomMessageTypeAndSessionId()
+        {
+            // Arrange
+            var content = new CustomMessageType
+            {
+                Message = Guid.NewGuid().ToString()
+            };
+
+            var sessionId = Guid.NewGuid().ToString();
+
+            // Act
+            await _sut.EnqueueAsync(content, sessionId, CancellationToken.None);
+
+            // Clean up
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_InvokeWithCustomMessageTypeSetsSessionId()
+        {
+            // Arrange
+            var content = new CustomMessageType
+            {
+                Message = Guid.NewGuid().ToString()
+            };
+
+            var sessionId = "session-id";
+
+            // Act
+            await _sut.EnqueueAsync(content, sessionId, CancellationToken.None);
+
+            var message = await _sut.DequeueAsync(CancellationToken.None);
+
+            // Assert
+            Assert.Equal(sessionId, message.SessionId);
+
+            // Clean up
+            await _sut.CompleteAsync(message, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_CanInvokeWithMultipleMessagesAndSessionId()
+        {
+            // Arrange
+            var messages = new List<string>
+            {
+                Guid.NewGuid().ToString(),
+                Guid.NewGuid().ToString()
+            };
+
+            var sessionId = Guid.NewGuid().ToString();
+
+            // Act
+            await _sut.EnqueueAsync<string>(messages, sessionId, CancellationToken.None);
+
+            // Clean up
+            var message1 = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message1, CancellationToken.None);
+            var message2 = await _sut.DequeueAsync(CancellationToken.None);
+            await _sut.CompleteAsync(message2, CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task EnqueueAsync_InvokeWithMultipleMessagesSetsSessionId()
+        {
+            // Arrange
+            var messages = new List<string>
+            {
+                Guid.NewGuid().ToString(),
+                Guid.NewGuid().ToString()
+            };
+
+            var sessionId = "session-id";
+
+            // Act
+            await _sut.EnqueueAsync<string>(messages, sessionId, CancellationToken.None);
+            var message1 = await _sut.DequeueAsync(CancellationToken.None);
+            var message2 = await _sut.DequeueAsync(CancellationToken.None);
+
+            // Assert
+
+            Assert.Equal(sessionId, message1.SessionId);
+            Assert.Equal(sessionId, message2.SessionId);
+
+            // Clean up
+            await _sut.CompleteAsync(message1, CancellationToken.None);
+            await _sut.CompleteAsync(message2, CancellationToken.None);
+        }
+
+        [Fact]
         public async Task DequeueAsync_CanInvoke()
         {
             // Act

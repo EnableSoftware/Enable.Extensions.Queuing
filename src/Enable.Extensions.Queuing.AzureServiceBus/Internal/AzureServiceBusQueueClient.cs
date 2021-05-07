@@ -192,6 +192,11 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
                 message.MessageId = queueMessage.MessageId;
             }
 
+            if (!string.IsNullOrEmpty(queueMessage.SessionId))
+            {
+                message.SessionId = queueMessage.SessionId;
+            }
+
             return message;
         }
     }
