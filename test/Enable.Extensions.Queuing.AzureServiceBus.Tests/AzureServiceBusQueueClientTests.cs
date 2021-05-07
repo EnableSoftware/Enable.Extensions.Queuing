@@ -246,7 +246,6 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             var message2 = await _sut.DequeueAsync(CancellationToken.None);
 
             // Assert
-
             Assert.Equal(sessionId, message1.SessionId);
             Assert.Equal(sessionId, message2.SessionId);
 

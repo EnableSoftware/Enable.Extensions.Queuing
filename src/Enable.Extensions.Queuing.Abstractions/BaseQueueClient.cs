@@ -38,45 +38,34 @@ namespace Enable.Extensions.Queuing.Abstractions
             byte[] content,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            IQueueMessage message = new QueueMessage(content);
-
-            return EnqueueAsync(message, cancellationToken);
+            return EnqueueAsync(content, null, cancellationToken);
         }
 
         public Task EnqueueAsync(
             string content,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return EnqueueAsync<string>(content, cancellationToken);
+            return EnqueueAsync(content, null, cancellationToken);
         }
 
         public Task EnqueueAsync<T>(
             T content,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var message = SerializeQueueMessage(content);
-
-            return EnqueueAsync(message, cancellationToken);
+            return EnqueueAsync(content, null, cancellationToken);
         }
 
         public Task EnqueueAsync<T>(
             IEnumerable<T> messages,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var batch = new List<IQueueMessage>();
-
-            foreach (var message in messages)
-            {
-                batch.Add(SerializeQueueMessage(message));
-            }
-
-            return EnqueueAsync(messages: batch, cancellationToken: cancellationToken);
+            return EnqueueAsync(messages, null, cancellationToken);
         }
 
         public Task EnqueueAsync(
             byte[] content,
             string sessionId,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             IQueueMessage message = new QueueMessage(content, sessionId);
 
@@ -134,15 +123,6 @@ namespace Enable.Extensions.Queuing.Abstractions
 
         protected virtual void Dispose(bool disposing)
         {
-        }
-
-        private IQueueMessage SerializeQueueMessage<T>(T content)
-        {
-            var json = JsonConvert.SerializeObject(content);
-
-            var payload = Encoding.UTF8.GetBytes(json);
-
-            return new QueueMessage(payload);
         }
 
         private IQueueMessage SerializeQueueMessage<T>(T content, string sessionId)
