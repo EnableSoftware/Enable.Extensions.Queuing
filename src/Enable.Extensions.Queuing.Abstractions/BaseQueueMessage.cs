@@ -9,6 +9,8 @@ namespace Enable.Extensions.Queuing.Abstractions
 
         public abstract string LeaseId { get; }
 
+        public abstract string SessionId { get; }
+
         public abstract uint DequeueCount { get; }
 
         public abstract byte[] Body { get; }

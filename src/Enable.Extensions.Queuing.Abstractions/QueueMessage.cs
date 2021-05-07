@@ -21,5 +21,7 @@ namespace Enable.Extensions.Queuing.Abstractions
         public override string LeaseId => throw new System.NotImplementedException();
 
         public override string MessageId { get; }
+
+        public override string SessionId => throw new System.NotImplementedException();
     }
 }

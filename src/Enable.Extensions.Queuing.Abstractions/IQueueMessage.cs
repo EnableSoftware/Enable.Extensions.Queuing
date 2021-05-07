@@ -26,6 +26,14 @@ namespace Enable.Extensions.Queuing.Abstractions
         string LeaseId { get; }
 
         /// <summary>
+        /// Gets the session ID.
+        /// </summary>
+        /// <remarks>
+        /// The session ID is used to mark a relationship between messages.
+        /// </remarks>
+        string SessionId { get; }
+
+        /// <summary>
         /// Gets the number of times this message has been dequeued.
         /// </summary>
         uint DequeueCount { get; }

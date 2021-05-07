@@ -19,5 +19,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
         public override uint DequeueCount => (uint)_message.SystemProperties.DeliveryCount;
 
         public override string LeaseId => _message.SystemProperties.LockToken;
+
+        public override string SessionId => _message.SessionId;
     }
 }

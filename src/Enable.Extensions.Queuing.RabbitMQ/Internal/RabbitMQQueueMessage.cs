@@ -30,5 +30,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         public override string LeaseId { get; }
 
         public override string MessageId { get; }
+
+        public override string SessionId => null;
     }
 }

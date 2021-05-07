@@ -19,6 +19,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
         public override string LeaseId => _leaseId;
 
+        public override string SessionId => null;
+
         public override uint DequeueCount => (uint)_message.DequeueCount;
 
         public override byte[] Body => _message.AsBytes;
