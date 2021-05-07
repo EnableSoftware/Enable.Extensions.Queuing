@@ -73,6 +73,49 @@ namespace Enable.Extensions.Queuing.Abstractions
             return EnqueueAsync(messages: batch, cancellationToken: cancellationToken);
         }
 
+        public Task EnqueueAsync(
+            byte[] content,
+            string sessionId,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            IQueueMessage message = new QueueMessage(content, sessionId);
+
+            return EnqueueAsync(message, cancellationToken);
+        }
+
+        public Task EnqueueAsync(
+            string content,
+            string sessionId,
+            CancellationToken cancellationToken = default)
+        {
+            return EnqueueAsync<string>(content, sessionId, cancellationToken);
+        }
+
+        public Task EnqueueAsync<T>(
+            T content,
+            string sessionId,
+            CancellationToken cancellationToken = default)
+        {
+            var message = SerializeQueueMessage(content, sessionId);
+
+            return EnqueueAsync(message, cancellationToken);
+        }
+
+        public Task EnqueueAsync<T>(
+            IEnumerable<T> messages,
+            string sessionId,
+            CancellationToken cancellationToken = default)
+        {
+            var batch = new List<IQueueMessage>();
+
+            foreach (var message in messages)
+            {
+                batch.Add(SerializeQueueMessage(message, sessionId));
+            }
+
+            return EnqueueAsync(messages: batch, cancellationToken: cancellationToken);
+        }
+
         public Task RegisterMessageHandler(
             Func<IQueueMessage, CancellationToken, Task> messageHandler)
         {
@@ -100,6 +143,15 @@ namespace Enable.Extensions.Queuing.Abstractions
             var payload = Encoding.UTF8.GetBytes(json);
 
             return new QueueMessage(payload);
+        }
+
+        private IQueueMessage SerializeQueueMessage<T>(T content, string sessionId)
+        {
+            var json = JsonConvert.SerializeObject(content);
+
+            var payload = Encoding.UTF8.GetBytes(json);
+
+            return new QueueMessage(payload, sessionId);
         }
     }
 }

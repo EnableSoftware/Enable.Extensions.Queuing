@@ -131,6 +131,72 @@ namespace Enable.Extensions.Queuing.Abstractions
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
+        /// Asynchronously enqueue a message on to the queue, with a session ID.
+        /// </summary>
+        /// <param name="content">The payload of the message to enqueue.</param>
+        /// <param name="sessionId">The session ID to attach to the message.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync(
+            byte[] content,
+            string sessionId,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Asynchronously enqueue a message on to the queue, with a session ID.
+        /// </summary>
+        /// <param name="content">The payload of the message to enqueue.</param>
+        /// <param name="sessionId">The session ID to attach to the message.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync(
+            string content,
+            string sessionId,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Asynchronously enqueue a message on to the queue, with a session ID.
+        /// </summary>
+        /// <typeparam name="T">The type of the payload to enqueue.</typeparam>
+        /// <param name="content">The payload of the message to enqueue.</param>
+        /// <param name="sessionId">The session ID to attach to the message.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync<T>(
+            T content,
+            string sessionId,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Asynchronously enqueue a batch of messages on to the queue, with a shared session ID.
+        /// </summary>
+        /// <typeparam name="T">The type of the payload to enqueue.</typeparam>
+        /// <param name="messages">The collection of payload items to enqueue.</param>
+        /// <param name="sessionId">The session ID to attach to the messages.</param>
+        /// <param name="cancellationToken">
+        /// A <see cref="CancellationToken"/> to observe while waiting for a task to complete.
+        /// </param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation.
+        /// </returns>
+        Task EnqueueAsync<T>(
+            IEnumerable<T> messages,
+            string sessionId,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
         /// Register a message handler. This handler is awaited each time that
         /// a new message is received.
         /// </summary>
