@@ -119,7 +119,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             {
                 AutoComplete = messageHandlerOptions.AutoComplete,
                 MaxConcurrentCalls = messageHandlerOptions.MaxConcurrentCalls,
-                MaxAutoRenewDuration = TimeSpan.FromMinutes(5)
+                MaxAutoRenewDuration = TimeSpan.FromHours(1)
             };
 
             _messageReceiver.RegisterMessageHandler(
