@@ -1,6 +1,6 @@
 # Enable.Extensions.Queuing
 
-[![Build status](https://ci.appveyor.com/api/projects/status/0debl4iitj086eto/branch/master?svg=true)](https://ci.appveyor.com/project/EnableSoftware/enable-extensions-queuing/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/0debl4iitj086eto/branch/main?svg=true)](https://ci.appveyor.com/project/EnableSoftware/enable-extensions-queuing/branch/main)
 
 Messaging queue abstractions for building testable applications.
 
@@ -144,3 +144,4 @@ namespace QueuingSamples
 [`Enable.Extensions.Queuing.RabbitMQ`]: https://www.nuget.org/packages/Enable.Extensions.Queuing.RabbitMQ/
 [`Enable.Extensions.Queuing.AzureServiceBus`]: https://www.nuget.org/packages/Enable.Extensions.Queuing.AzureServiceBus/
 [`Enable.Extensions.Queuing.AzureStorage`]: https://www.nuget.org/packages/Enable.Extensions.Queuing.AzureStorage/
+
