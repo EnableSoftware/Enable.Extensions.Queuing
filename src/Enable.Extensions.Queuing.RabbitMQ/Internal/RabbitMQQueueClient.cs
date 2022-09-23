@@ -11,8 +11,6 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
     internal class RabbitMQQueueClient : BaseQueueClient
     {
-        private const string RedeliveryCountHeaderName = "x-redelivered-count";
-
         private readonly ConnectionFactory _connectionFactory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
@@ -123,7 +121,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             }
 
             var message = new RabbitMQQueueMessage(
-                result.Body,
+                result.Body.ToArray(),
                 result.DeliveryTag,
                 result.BasicProperties);
 
@@ -170,7 +168,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                         _queueName,
                         mandatory,
                         messageProperties,
-                        message.Body);
+                        new ReadOnlyMemory<byte>(message.Body));
                 }
 
                 batch.Publish();
@@ -292,7 +290,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             var cancellationToken = CancellationToken.None;
 
             var message = new RabbitMQQueueMessage(
-                eventArgs.Body,
+                eventArgs.Body.ToArray(),
                 eventArgs.DeliveryTag,
                 eventArgs.BasicProperties);
 
