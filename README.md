@@ -85,6 +85,8 @@ namespace QueuingSamples
                 Password = "guest",
             };
 
+            // Using new RabbitMQQuorumQueueClientFactory(options) can be used to
+            // create a quorum queue if the queue does not already exist. 
             var queueFactory = new RabbitMQQueueClientFactory(options);
 
             var queueName = "your-queue-name";
