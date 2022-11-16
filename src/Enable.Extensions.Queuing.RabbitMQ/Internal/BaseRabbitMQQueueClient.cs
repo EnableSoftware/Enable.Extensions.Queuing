@@ -25,6 +25,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
             // Declare the dead letter queue.
             DeadLetterQueueName = GetDeadLetterQueueName(queueName);
+            DLQueueArguments = null;
 
             ExchangeName = string.Empty;
 
