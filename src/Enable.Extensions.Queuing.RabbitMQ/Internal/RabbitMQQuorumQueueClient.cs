@@ -1,22 +1,22 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Enable.Extensions.Queuing.Abstractions;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 {
-    internal class RabbitMQQueueClient : BaseRabbitMQQueueClient
+    internal class RabbitMQQuorumQueueClient : BaseRabbitMQQueueClient
     {
-        public RabbitMQQueueClient(
+        public RabbitMQQuorumQueueClient(
             ConnectionFactory connectionFactory,
             string queueName,
             QueueMode queueMode = QueueMode.Default)
             : base(connectionFactory, queueName, queueMode)
         {
+            QueueArguments.Add("x-queue-type", "quorum");
+            DLQueueArguments = new Dictionary<string, object>
+                {
+                    { "x-queue-type", "quorum" },
+                };
+
             DeclareQueues();
         }
     }

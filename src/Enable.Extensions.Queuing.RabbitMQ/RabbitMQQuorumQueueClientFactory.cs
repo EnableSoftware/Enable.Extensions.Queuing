@@ -4,9 +4,9 @@ using Enable.Extensions.Queuing.RabbitMQ.Internal;
 
 namespace Enable.Extensions.Queuing.RabbitMQ
 {
-    public class RabbitMQQueueClientFactory : BaseRabbitMQQueueClientFactory, IQueueClientFactory
+    public class RabbitMQQuorumQueueClientFactory : BaseRabbitMQQueueClientFactory, IQueueClientFactory
     {
-        public RabbitMQQueueClientFactory(RabbitMQQueueClientFactoryOptions options)
+        public RabbitMQQuorumQueueClientFactory(RabbitMQQueueClientFactoryOptions options)
             : base(options)
         {
         }
@@ -18,7 +18,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ
                 throw new ArgumentException(nameof(queueName));
             }
 
-            return new RabbitMQQueueClient(ConnectionFactory, queueName, QueueMode);
+            return new RabbitMQQuorumQueueClient(ConnectionFactory, queueName, QueueMode);
         }
     }
 }
