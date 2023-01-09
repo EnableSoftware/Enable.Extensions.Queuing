@@ -35,7 +35,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task EnqueueAsync_CanInvokeWithString()
         {
             // Arrange
-            var content = Guid.NewGuid().ToString();
+            var content = "a";
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
@@ -49,7 +49,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task EnqueueAsync_CanInvokeWithByteArray()
         {
             // Arrange
-            var content = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
+            var content = Encoding.UTF8.GetBytes("b");
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
@@ -65,7 +65,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Arrange
             var content = new CustomMessageType
             {
-                Message = Guid.NewGuid().ToString()
+                Message = "c"
             };
 
             // Act
@@ -82,8 +82,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Arrange
             var messages = new List<string>
             {
-                Guid.NewGuid().ToString(),
-                Guid.NewGuid().ToString()
+                "d",
+                "e"
             };
 
             // Act
@@ -110,7 +110,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task DequeueAsync_ReturnsEnqueuedMessage()
         {
             // Arrange
-            var content = Guid.NewGuid().ToString();
+            var content = "f";
 
             await _sut.EnqueueAsync(content, CancellationToken.None);
 
@@ -128,7 +128,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task DequeueAsync_CanDeserializeMessage()
         {
             // Arrange
-            var content = Guid.NewGuid().ToString();
+            var content = "g";
 
             await _sut.EnqueueAsync(content, CancellationToken.None);
 
@@ -147,7 +147,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                "h",
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
@@ -161,7 +161,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                "i",
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
@@ -194,7 +194,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                "j",
                 CancellationToken.None);
 
             // Assert
@@ -282,7 +282,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                "k",
                 CancellationToken.None);
 
             // Assert
@@ -294,7 +294,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                Guid.NewGuid().ToString(),
+                "l",
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
