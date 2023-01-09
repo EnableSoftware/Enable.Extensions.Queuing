@@ -73,7 +73,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Internal
             // This timeout is arbitrary. It is needed in order to return null
             // if no messages are queued, and must be long enough to allow time
             // for connection setup.
-            var message = await _messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(7));
+            var message = await _messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(5));
 
             if (message == null)
             {
