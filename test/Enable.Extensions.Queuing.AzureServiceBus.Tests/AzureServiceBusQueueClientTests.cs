@@ -132,8 +132,12 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             await _sut.EnqueueAsync(content, CancellationToken.None);
 
+            Console.WriteLine("Dequeuing", DateTimeOffset.Now);
+
             // Act
             var message = await _sut.DequeueAsync(CancellationToken.None);
+
+            Console.WriteLine("Dequeued", DateTimeOffset.Now);
 
             // Assert
             Assert.Equal(content, message.GetBody<string>());
@@ -280,10 +284,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             await _sut.RegisterMessageHandler(MessageHandler, options);
 
+            Console.WriteLine("Enqueuing", DateTimeOffset.Now);
+
             // Act
             await _sut.EnqueueAsync(
                 "k",
                 CancellationToken.None);
+
+            Console.WriteLine("Enqueued", DateTimeOffset.Now);
 
             // Assert
             Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
