@@ -35,7 +35,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task EnqueueAsync_CanInvokeWithString()
         {
             // Arrange
-            var content = "a";
+            var content = Guid.NewGuid().ToString();
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
@@ -49,7 +49,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task EnqueueAsync_CanInvokeWithByteArray()
         {
             // Arrange
-            var content = Encoding.UTF8.GetBytes("b");
+            var content = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString());
 
             // Act
             await _sut.EnqueueAsync(content, CancellationToken.None);
@@ -65,7 +65,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Arrange
             var content = new CustomMessageType
             {
-                Message = "c"
+                Message = Guid.NewGuid().ToString()
             };
 
             // Act
@@ -82,8 +82,8 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
             // Arrange
             var messages = new List<string>
             {
-                "d",
-                "e"
+                Guid.NewGuid().ToString(),
+                Guid.NewGuid().ToString()
             };
 
             // Act
@@ -110,7 +110,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task DequeueAsync_ReturnsEnqueuedMessage()
         {
             // Arrange
-            var content = "f";
+            var content = Guid.NewGuid().ToString();
 
             await _sut.EnqueueAsync(content, CancellationToken.None);
 
@@ -128,16 +128,12 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         public async Task DequeueAsync_CanDeserializeMessage()
         {
             // Arrange
-            var content = "g";
+            var content = Guid.NewGuid().ToString();
 
             await _sut.EnqueueAsync(content, CancellationToken.None);
 
-            Console.WriteLine("Dequeuing", DateTimeOffset.Now);
-
             // Act
             var message = await _sut.DequeueAsync(CancellationToken.None);
-
-            Console.WriteLine("Dequeued", DateTimeOffset.Now);
 
             // Assert
             Assert.Equal(content, message.GetBody<string>());
@@ -151,7 +147,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                "h",
+                Guid.NewGuid().ToString(),
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
@@ -165,7 +161,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                "i",
+                Guid.NewGuid().ToString(),
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
@@ -198,7 +194,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             // Act
             await _sut.EnqueueAsync(
-                "j",
+                Guid.NewGuid().ToString(),
                 CancellationToken.None);
 
             // Assert
@@ -284,14 +280,10 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
 
             await _sut.RegisterMessageHandler(MessageHandler, options);
 
-            Console.WriteLine("Enqueuing", DateTimeOffset.Now);
-
             // Act
             await _sut.EnqueueAsync(
-                "k",
+                Guid.NewGuid().ToString(),
                 CancellationToken.None);
-
-            Console.WriteLine("Enqueued", DateTimeOffset.Now);
 
             // Assert
             Assert.True(evt.WaitOne(TimeSpan.FromSeconds(100)));
@@ -302,7 +294,7 @@ namespace Enable.Extensions.Queuing.AzureServiceBus.Tests
         {
             // Arrange
             await _sut.EnqueueAsync(
-                "l",
+                Guid.NewGuid().ToString(),
                 CancellationToken.None);
 
             var message = await _sut.DequeueAsync(CancellationToken.None);
