@@ -17,14 +17,15 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         public BaseRabbitMQQueueClient(
             ConnectionFactory connectionFactory,
             string queueName,
-            QueueMode queueMode = QueueMode.Default)
+            QueueMode queueMode = QueueMode.Default,
+            string deadLetterQueueName = null)
         {
             ConnectionFactory = connectionFactory;
             Connection = ConnectionFactory.CreateConnection();
             Channel = Connection.CreateModel();
 
             // Declare the dead letter queue.
-            DeadLetterQueueName = GetDeadLetterQueueName(queueName);
+            DeadLetterQueueName = deadLetterQueueName ?? GetDeadLetterQueueName(queueName);
             DLQueueArguments = null;
 
             ExchangeName = string.Empty;

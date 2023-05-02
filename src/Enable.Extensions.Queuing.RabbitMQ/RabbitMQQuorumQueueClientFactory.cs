@@ -11,14 +11,14 @@ namespace Enable.Extensions.Queuing.RabbitMQ
         {
         }
 
-        public IQueueClient GetQueueReference(string queueName)
+        public IQueueClient GetQueueReference(string queueName, string deadLetterQueueName = null)
         {
             if (string.IsNullOrWhiteSpace(queueName))
             {
                 throw new ArgumentException(nameof(queueName));
             }
 
-            return new RabbitMQQuorumQueueClient(ConnectionFactory, queueName, QueueMode);
+            return new RabbitMQQuorumQueueClient(ConnectionFactory, queueName, QueueMode, deadLetterQueueName);
         }
     }
 }
