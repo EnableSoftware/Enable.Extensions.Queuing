@@ -23,13 +23,14 @@ namespace Enable.Extensions.Queuing.AzureServiceBus
             _options = options;
         }
 
-        public IQueueClient GetQueueReference(string queueName)
+        public IQueueClient GetQueueReference(string queueName, string deadLetterQueueName = null)
         {
             if (string.IsNullOrWhiteSpace(queueName))
             {
                 throw new ArgumentException(nameof(queueName));
             }
 
+            // We do not currently define a dead letter queue in service bus client, so we do not pass the name.
             return new AzureServiceBusQueueClient(
                 _options.ConnectionString,
                 queueName,

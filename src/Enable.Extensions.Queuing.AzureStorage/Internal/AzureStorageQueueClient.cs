@@ -24,7 +24,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
         public AzureStorageQueueClient(
             string accountName,
             string accountKey,
-            string queueName)
+            string queueName,
+            string deadLetterQueueName = null)
         {
             var client = GetCloudQueueClient(accountName, accountKey, queueName);
 
@@ -37,8 +38,8 @@ namespace Enable.Extensions.Queuing.AzureStorage.Internal
 
             _deadLetterQueueFactory = new AsyncLazy<CloudQueue>(async () =>
             {
-                var deadLetterQueueName = GetDeadLetterQueueName(queueName);
-                var deadLetterQueue = client.GetQueueReference(deadLetterQueueName);
+                var finalDeadLetterQueueName = deadLetterQueueName ?? GetDeadLetterQueueName(queueName);
+                var deadLetterQueue = client.GetQueueReference(finalDeadLetterQueueName);
                 await deadLetterQueue.CreateIfNotExistsAsync();
                 return deadLetterQueue;
             });

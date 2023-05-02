@@ -8,8 +8,9 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
         public RabbitMQQuorumQueueClient(
             ConnectionFactory connectionFactory,
             string queueName,
-            QueueMode queueMode = QueueMode.Default)
-            : base(connectionFactory, queueName, queueMode)
+            QueueMode queueMode = QueueMode.Default,
+            string deadLetterQueueName = null)
+            : base(connectionFactory, queueName, queueMode, deadLetterQueueName)
         {
             QueueArguments.Add("x-queue-type", "quorum");
             DLQueueArguments = new Dictionary<string, object>

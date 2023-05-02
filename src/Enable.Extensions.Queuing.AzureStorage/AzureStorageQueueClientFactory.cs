@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Enable.Extensions.Queuing.Abstractions;
 using Enable.Extensions.Queuing.AzureStorage.Internal;
 
@@ -28,7 +28,7 @@ namespace Enable.Extensions.Queuing.AzureStorage
             _options = options;
         }
 
-        public IQueueClient GetQueueReference(string queueName)
+        public IQueueClient GetQueueReference(string queueName, string deadLetterQueueName = null)
         {
             if (string.IsNullOrWhiteSpace(queueName))
             {
@@ -38,7 +38,8 @@ namespace Enable.Extensions.Queuing.AzureStorage
             return new AzureStorageQueueClient(
                 _options.AccountName,
                 _options.AccountKey,
-                queueName);
+                queueName,
+                deadLetterQueueName);
         }
     }
 }
