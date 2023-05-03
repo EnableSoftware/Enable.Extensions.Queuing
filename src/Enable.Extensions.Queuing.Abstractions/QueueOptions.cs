@@ -15,14 +15,14 @@ namespace Enable.Extensions.Queuing.Abstractions
         public int? DeadLetterQueueTtlMs { get; set; }
 
         /// <summary>
-        /// Gets or sets the dead letter exchange, if not providied the default value will be used.
-        /// Applicable to RabbitMQ queues.
+        /// Gets or sets the x-dead-letter-exchange for the dead letter queue.
+        /// If not providied the default value will be used. Applicable to RabbitMQ queues.
         /// </summary>
         public string DeadLetterExchange { get; set; }
 
         /// <summary>
-        /// Gets or sets the dead letter routing key, if not providied the default value will be used.
-        /// Applicable to RabbitMQ queues.
+        /// Gets or sets the x-dead-letter-routing-keyfor the dead letter queue.
+        /// If not providied the default value will be used. Applicable to RabbitMQ queues.
         /// </summary>
         public string DeadLetterRoutingKey { get; set; }
     }
