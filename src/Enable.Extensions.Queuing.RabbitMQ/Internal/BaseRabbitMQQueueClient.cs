@@ -47,13 +47,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 QueueArguments.Add("x-queue-mode", "lazy");
             }
 
-            if (queueOptions != null && queueOptions.DeadLetterQueueTtlMs.HasValue)
-            {
-                DLQueueArguments = new Dictionary<string, object>
-                {
-                    { "x-message-ttl", queueOptions.DeadLetterQueueTtlMs.Value },
-                };
-            }
+            CreateDLQueueArguments(queueOptions);
         }
 
         protected string ExchangeName { get; set; }
@@ -339,6 +333,30 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 }
 
                 await AbandonAsync(message, cancellationToken);
+            }
+        }
+
+        private void CreateDLQueueArguments(QueueOptions queueOptions = null)
+        {
+            if (queueOptions != null)
+            {
+                DLQueueArguments = new Dictionary<string, object>();
+
+                // Empty is a valid input for this setting.
+                if (queueOptions.DeadLetterExchange != null)
+                {
+                    DLQueueArguments.Add("x-dead-letter-exchange", queueOptions.DeadLetterExchange);
+                }
+
+                if (!string.IsNullOrEmpty(queueOptions.DeadLetterRoutingKey))
+                {
+                    DLQueueArguments.Add("x-dead-letter-routing-key", queueOptions.DeadLetterRoutingKey);
+                }
+
+                if (queueOptions.DeadLetterQueueTtlMs.HasValue)
+                {
+                    DLQueueArguments.Add("x-message-ttl", queueOptions.DeadLetterQueueTtlMs.Value);
+                }
             }
         }
     }
