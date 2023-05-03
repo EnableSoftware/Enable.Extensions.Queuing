@@ -49,7 +49,7 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
 
             if (queueOptions != null && queueOptions.DeadLetterQueueTtlMs.HasValue)
             {
-                QueueArguments = new Dictionary<string, object>
+                DLQueueArguments = new Dictionary<string, object>
                 {
                     { "x-message-ttl", queueOptions.DeadLetterQueueTtlMs.Value },
                 };
