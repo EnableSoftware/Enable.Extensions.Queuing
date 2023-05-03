@@ -47,11 +47,11 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
                 QueueArguments.Add("x-queue-mode", "lazy");
             }
 
-            if (queueOptions != null && queueOptions.DeadLettQueueTtlMs.HasValue)
+            if (queueOptions != null && queueOptions.DeadLetterQueueTtlMs.HasValue)
             {
                 QueueArguments = new Dictionary<string, object>
                 {
-                    { "x-message-ttl", queueOptions.DeadLettQueueTtlMs.Value },
+                    { "x-message-ttl", queueOptions.DeadLetterQueueTtlMs.Value },
                 };
             }
         }

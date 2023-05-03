@@ -12,6 +12,6 @@ namespace Enable.Extensions.Queuing.Abstractions
         /// Gets or sets the x-message-ttl for RabbitMQ queues, if not providied the default value will be used.
         /// Applicable to RabbitMQ queues.
         /// </summary>
-        public int? DeadLettQueueTtlMs { get; set; }
+        public int? DeadLetterQueueTtlMs { get; set; }
     }
 }
