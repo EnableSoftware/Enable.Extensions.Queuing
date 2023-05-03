@@ -16,14 +16,14 @@ namespace Enable.Extensions.Queuing.Abstractions
 
         /// <summary>
         /// Gets or sets the x-dead-letter-exchange for the dead letter queue.
-        /// If not providied the default value will be used.
+        /// If not providied the value will not be set.
         /// Applicable to RabbitMQ queues.
         /// </summary>
         public string DeadLetterExchange { get; set; }
 
         /// <summary>
         /// Gets or sets the x-dead-letter-routing-key for the dead letter queue.
-        /// If not providied the default value will be used.
+        /// If not providied the value will not be set.
         /// Applicable to RabbitMQ queues.
         /// </summary>
         public string DeadLetterRoutingKey { get; set; }
