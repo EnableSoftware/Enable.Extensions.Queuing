@@ -18,14 +18,17 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             ConnectionFactory connectionFactory,
             string queueName,
             QueueMode queueMode = QueueMode.Default,
-            string deadLetterQueueName = null)
+            QueueOptions queueOptions = null)
         {
             ConnectionFactory = connectionFactory;
             Connection = ConnectionFactory.CreateConnection();
             Channel = Connection.CreateModel();
 
             // Declare the dead letter queue.
-            DeadLetterQueueName = deadLetterQueueName ?? GetDeadLetterQueueName(queueName);
+            DeadLetterQueueName = queueOptions != null && queueOptions.DeadLetterQueueName != null
+                ? queueOptions.DeadLetterQueueName
+                : GetDeadLetterQueueName(queueName);
+
             DLQueueArguments = null;
 
             ExchangeName = string.Empty;
@@ -42,6 +45,14 @@ namespace Enable.Extensions.Queuing.RabbitMQ.Internal
             if (queueMode == QueueMode.Lazy)
             {
                 QueueArguments.Add("x-queue-mode", "lazy");
+            }
+
+            if (queueOptions != null && queueOptions.DeadLetterQueueTtlMs.HasValue)
+            {
+                QueueArguments = new Dictionary<string, object>
+                {
+                    { "x-message-ttl", queueOptions.DeadLetterQueueTtlMs.Value },
+                };
             }
         }
 

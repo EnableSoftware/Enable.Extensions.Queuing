@@ -93,7 +93,7 @@ namespace QueuingSamples
 
             // Get a reference to the queue that you want to work with.
             // The queue will be automatically created if it doesn't exist.
-            // The dead letter queue name can optionally be passed into this method.
+            // The dead letter queue name can optionally be passed into this method via QueueOptions.
             using (var queue = queueFactory.GetQueueReference(queueName))
             {
                 // Add a new item to the queue.

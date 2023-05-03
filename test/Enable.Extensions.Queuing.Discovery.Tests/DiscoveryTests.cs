@@ -25,7 +25,7 @@ namespace Enable.Extensions.Queuing.Discovery.Tests
             // Arrange
             var queueClient = new Mock<IQueueClient>();
             var queueClientFactory = new Mock<IQueueClientFactory>();
-            queueClientFactory.Setup(o => o.GetQueueReference(QueueName, It.IsAny<string>())).Returns(queueClient.Object);
+            queueClientFactory.Setup(o => o.GetQueueReference(QueueName, It.IsAny<QueueOptions>())).Returns(queueClient.Object);
 
             var job = new TestJob();
 
@@ -40,7 +40,7 @@ namespace Enable.Extensions.Queuing.Discovery.Tests
 
             // Assert
             queueClientFactory.Verify(
-                o => o.GetQueueReference(QueueName, It.IsAny<string>()),
+                o => o.GetQueueReference(QueueName, It.IsAny<QueueOptions>()),
                 Times.Once);
 
             queueClient.Verify(
@@ -58,7 +58,7 @@ namespace Enable.Extensions.Queuing.Discovery.Tests
 
             var queueClient = new Mock<IQueueClient>();
             var queueClientFactory = new Mock<IQueueClientFactory>();
-            queueClientFactory.Setup(o => o.GetQueueReference(QueueName, It.IsAny<string>())).Returns(queueClient.Object);
+            queueClientFactory.Setup(o => o.GetQueueReference(QueueName, It.IsAny<QueueOptions>())).Returns(queueClient.Object);
 
             var services = new ServiceCollection();
             services.AddSingleton(new TestJob());
